@@ -20,7 +20,7 @@
 [![IMPPAT 2.0](https://img.shields.io/badge/Dataset-IMPPAT%202.0%20(Govt.%20India)-FF6B35?style=for-the-badge)](https://cb.imsc.res.in/imppat)
 [![AKGEC](https://img.shields.io/badge/AKGEC%20Ghaziabad-Group%2016%20CSE--2-1A365D?style=for-the-badge)](https://www.akgec.ac.in/)
 [![License](https://img.shields.io/badge/License-MIT-38B2AC?style=for-the-badge)](LICENSE)
-[![Stars](https://img.shields.io/github/stars/rahulpoddar798/vedaai?style=for-the-badge&color=FFD700)](/)
+[![Stars](https://img.shields.io/github/stars/rahulpoddar798/VedaAI-A-Knowledge-Graph-Augmented-Multi-Agent-RAG-System-for-Trustworthy-Ayurvedic-Health-Guidance?style=for-the-badge&color=FFD700)](https://github.com/rahulpoddar798/VedaAI-A-Knowledge-Graph-Augmented-Multi-Agent-RAG-System-for-Trustworthy-Ayurvedic-Health-Guidance)
 
 </div>
 
@@ -163,8 +163,8 @@ You also need a **free Neo4j Aura account**: [neo4j.com/cloud/aura](https://neo4
 ### Step 1 — Clone the Repo
 
 ```bash
-git clone https://github.com/rahulpoddar798/vedaai.git
-cd vedaai
+git clone https://github.com/rahulpoddar798/VedaAI-A-Knowledge-Graph-Augmented-Multi-Agent-RAG-System-for-Trustworthy-Ayurvedic-Health-Guidance.git
+cd VedaAI-A-Knowledge-Graph-Augmented-Multi-Agent-RAG-System-for-Trustworthy-Ayurvedic-Health-Guidance
 ```
 
 ### Step 2 — Install Dependencies
@@ -387,10 +387,10 @@ Computational Biology Group, The Institute of Mathematical Sciences (IMSc), Chen
 ## 🤝 How to Contribute (Team Members)
 
 ```bash
-# 1. Fork the repo on GitHub
+# 1. Fork the repo on GitHub: https://github.com/rahulpoddar798/VedaAI-A-Knowledge-Graph-Augmented-Multi-Agent-RAG-System-for-Trustworthy-Ayurvedic-Health-Guidance
 # 2. Clone your fork
-git clone https://github.com/YOUR_USERNAME/vedaai.git
-cd vedaai
+git clone https://github.com/YOUR_USERNAME/VedaAI-A-Knowledge-Graph-Augmented-Multi-Agent-RAG-System-for-Trustworthy-Ayurvedic-Health-Guidance.git
+cd VedaAI-A-Knowledge-Graph-Augmented-Multi-Agent-RAG-System-for-Trustworthy-Ayurvedic-Health-Guidance
 
 # 3. Install dependencies
 npm install

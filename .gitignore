@@ -15,6 +15,9 @@ yarn-error.log*
 # Build outputs from docx generation scripts
 *.undefined
 
+# Microsoft Office temporary lock files
+~$*
+
 # OS generated files
 .DS_Store
 Thumbs.db
