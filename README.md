@@ -4,7 +4,7 @@
 <img src="https://capsule-render.vercel.app/api?type=waving&color=0:1A365D,100:38B2AC&height=200&section=header&text=🌿%20VedaAI&fontSize=80&fontColor=ffffff&animation=fadeIn&fontAlignY=38&desc=Knowledge-Graph%20Augmented%20Multi-Agent%20RAG%20for%20Ayurvedic%20Safety&descAlignY=58&descAlign=50&descSize=16" width="100%"/>
 
 <!-- Animated Typing Effect -->
-<a href="https://git.io/typing-svg"><img src="https://readme-typing-svg.demolab.com?font=Fira+Code&size=22&pause=1000&color=38B2AC&center=true&vCenter=true&multiline=true&width=750&height=80&lines=Deterministic+Graph+Safety+%7C+Multi-Agent+Debate+%7C+Neo4j+Aura;Replacing+Probabilistic+Hope+with+Clinical+Graph-Grounding+%F0%9F%8C%BF" alt="Typing SVG" /></a>
+<a href="https://git.io/typing-svg"><img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=500&size=20&pause=1200&color=38B2AC&center=true&vCenter=true&width=800&height=45&lines=Deterministic+Clinical+Graph+Safety+%E2%80%A2+Neo4j+Aura;5-Agent+Dialectical+Debate+Pipeline+%E2%80%A2+Zero-Harm;Grounding+Classical+Ayurveda+with+Knowledge+Graphs;Replacing+Probabilistic+Hope+with+Deterministic+Safety" alt="Typing SVG" /></a>
 
 <br/>
 
@@ -28,67 +28,60 @@
 
 ## 🎯 The Problem We're Solving
 
-<div align="center">
+> ### 🚨 The Clinical Motivation (The Trap Query)
+> **Patient Inquiry:** *"Can I take Ginger for digestion in summer with acid reflux?"*
+> 
+> | 🤖 Standard ChatGPT / Vector RAG | 🌿 VedaAI (Multi-Agent + Knowledge Graph) |
+> | :-------------------------------- | :--------------------------------------- |
+> | ❌ **Recommends: YES** | ✅ **Rules: UNSAFE (97% Confidence)** |
+> | Matches `"Ginger ≈ digestion"` in dense vector embeddings. | Traverses multi-hop relational paths in Neo4j Aura in **< 200 ms**. |
+> | **Fatal Clinical Failure:** Completely misses that Ginger has *Ushna* (hot) virya, which causes severe aggravation in summer heat for an active acid reflux patient (*Triple Pitta Collision*). | **Clinical Safety Action:** Graph constraint engine intercepts the contraindication deterministically and safely recommends cooling alternatives (**Amla / Saunf**). |
 
-```
-┌──────────────────────────────────────────────────────────────────────────┐
-│                                                                          │
-│   Patient asks: "Can I take Ginger for digestion in summer               │
-│                  while having acid reflux?"                               │
-│                                                                          │
-│   🤖 Standard ChatGPT / AyurGenie RAG:                                  │
-│      "Yes! Ginger is great for digestion and Agni stimulation!"   ❌     │
-│       → DANGEROUS: Causes Triple Pitta Amplification                     │
-│         Hot virya + Hot summer + Pitta disorder = Severe flare-up        │
-│                                                                          │
-│   🌿 VedaAI:                                                             │
-│      "⚠️  UNSAFE (97% Confidence) — Contraindication detected!"  ✅     │
-│       → Knowledge Graph caught multi-hop Pitta collision in <200ms       │
-│       → Safely recommends: Amla (Sheeta/Cooling) instead                 │
-│                                                                          │
-└──────────────────────────────────────────────────────────────────────────┘
-```
-
-</div>
-
-> **Why does standard RAG fail?** Pure vector search finds "Ginger ≈ digestion" and says YES.  
-> It cannot walk the graph path: `Ginger →[AGGRAVATES]→ Pitta ←[DOMINANT_IN]← Summer ←[ASSOCIATED_WITH]← Acid Reflux`
+> 💡 **Why does standard RAG fail?** Pure vector similarity only checks keyword proximity (`Ginger` $\approx$ `digestion`).  
+> It cannot perform multi-hop constraint verification:  
+> `(:Herb {Ginger}) -[:AGGRAVATES]-> (:Dosha {Pitta}) <-[:DOMINANT_IN]- (:Season {Grishma}) <-[:ASSOCIATED_WITH]- (:Condition {Acid Reflux})`
 
 ---
 
 ## 🏗️ Architecture at a Glance
 
+<div align="center">
+  <img src="images/figure_6_0_system_architecture.jpg" alt="VedaAI System Architecture" width="90%"/>
+  <p><i>Figure: VedaAI End-to-End System & Multi-Agent Architecture</i></p>
+</div>
+
+<details open>
+<summary><b>🔍 Click to view interactive Flowchart (Mermaid)</b></summary>
+
+```mermaid
+flowchart TD
+    User(["👤 Patient Query & Clinical Profile<br/><i>'Can I take Ginger for digestion in summer with acid reflux?'</i>"]) --> A1
+
+    subgraph MAE ["⚡ 5-Agent Multi-Agent Orchestration Engine"]
+        A1["<b>Agent 1: Clinical Entity Extractor</b><br/>Extracts: Herb, Season, Prakriti, Conditions"]
+        A1 --> A2["<b>Agent 2: Dynamic Cypher Query Builder</b><br/>Generates multi-hop path traversals (&lt; 200 ms)"]
+        A2 --> A3["<b>Agent 3: Proponent Agent</b><br/>Argues FOR digestive efficacy"]
+        A2 --> A4["<b>Agent 4: Opponent Safety Agent</b><br/>Traverses conflict subgraph"]
+        A3 --> A5["<b>Agent 5: Judge Arbitrator</b><br/>Weighted sigmoid safety scoring"]
+        A4 -->|"🚨 Flags Triple Pitta Collision"| A5
+    end
+
+    subgraph DKS ["🗄️ Dual-Knowledge Substrates"]
+        Neo4j[("<b>Neo4j Aura Cloud</b><br/>46 Clinical Entities &amp; 150+ Edges<br/><i>PACIFIES, AGGRAVATES, TREATS</i>")]
+        Chroma[("<b>ChromaDB Vector Store</b><br/>Charaka Samhita Semantic Chunks<br/><i>768-dim text-embedding-004</i>")]
+    end
+
+    A2 <-->|"Deterministic Graph Constraints"| Neo4j
+    A2 <-->|"Dense Narrative Context"| Chroma
+
+    A5 --> Verdict["<b>Clinical Verdict: UNSAFE (97% Confidence)</b><br/>Safely prescribes cooling alternatives: <b>Amla / Saunf</b>"]
+
+    style MAE fill:#1A365D15,stroke:#2B6CB0,stroke-width:2px
+    style DKS fill:#008CC115,stroke:#00b5ad,stroke-width:2px
+    style Verdict fill:#27674920,stroke:#276749,stroke-width:2px
 ```
-╔═══════════════════════════════════════════════════════════════════════╗
-║                        USER QUERY LAYER                               ║
-║           "Herb for symptom in season with condition?"                ║
-╚══════════════════════════════╤════════════════════════════════════════╝
-                               │
-╔══════════════════════════════▼════════════════════════════════════════╗
-║                  ⚡ 5-AGENT ORCHESTRATION ENGINE                       ║
-║                                                                       ║
-║  🤖 Agent 1 ── Entity Extractor & Patient Profiler                   ║
-║       ↓   [Herb: Ginger] [Season: Grishma] [Prakriti: Pitta-Vata]   ║
-║  🤖 Agent 2 ── Dynamic Cypher Query Builder → Neo4j Aura Cloud       ║
-║       ↓   Multi-hop graph traversal (< 200ms)                        ║
-║  🤖 Agent 3 ── Proponent  ←──────────────────── argues FOR herb      ║
-║  🤖 Agent 4 ── Opponent   ←──────────── catches graph contraindic.   ║
-║       ↓   ⚠️  TRIPLE PITTA COLLISION DETECTED                        ║
-║  🤖 Agent 5 ── Judge ──── Weighted Safety Score ──► UNSAFE (97%)     ║
-╚══════════╤════════════════════════════════════╤══════════════════════╝
-           │                                    │
-╔══════════▼══════════════╗      ╔══════════════▼═════════════════════╗
-║   🗄️  NEO4J AURA CLOUD  ║      ║  📚 CHROMADB VECTOR STORE          ║
-║   ─────────────────────  ║      ║  ────────────────────────────────  ║
-║   46 Clinical Entities  ║      ║  Charaka Samhita chunks            ║
-║   150+ Relationship     ║      ║  768-dim text-embedding-004        ║
-║   Edges from IMPPAT 2.0 ║      ║  HNSW Cosine Similarity Search     ║
-║                         ║      ║                                    ║
-║   PACIFIES / AGGRAVATES ║      ║  Explains WHY, narratively         ║
-║   CONTRAINDICATED_IN    ║      ║  from classical Ayurvedic texts     ║
-║   TREATS / DOMINANT_IN  ║      ║                                    ║
-╚═════════════════════════╝      ╚════════════════════════════════════╝
-```
+
+</details>
 
 ---
 
