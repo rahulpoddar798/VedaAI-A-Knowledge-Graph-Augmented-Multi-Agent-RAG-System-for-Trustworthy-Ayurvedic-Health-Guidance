@@ -35,4 +35,5 @@ function buildVedaAIPipeline() {
   return workflow.compile();
 }
 
-module.exports = { buildVedaAIPipeline };
+// Historical pipeline retained only for reproducible baseline experiments.
+module.exports = { buildLegacyPipeline: buildVedaAIPipeline, ...require('./assessment_workflow') };

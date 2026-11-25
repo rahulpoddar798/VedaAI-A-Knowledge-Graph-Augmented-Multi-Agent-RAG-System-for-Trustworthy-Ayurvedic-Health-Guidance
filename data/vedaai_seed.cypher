@@ -6,7 +6,7 @@
 // ════════════════════════════════════════════════════════════════
 
 // STEP 0: Clear existing data (safe for fresh setup)
-MATCH (n) DETACH DELETE n;
+// Bootstrap targets an empty graph.
 
 // ── DOSHAS ──────────────────────────────────────────────────────
 CREATE (:Dosha {name: 'Vata', season_dominance: 'Varsha', qualities: 'dry,cold,light,mobile,subtle,rough'});

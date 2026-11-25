@@ -4,8 +4,7 @@ const path = require('path');
 const neo4j = require('neo4j-driver');
 
 async function seedDatabase() {
-  console.log('Connecting to Neo4j Aura at:', process.env.NEO4J_URI);
-  console.log('User:', process.env.NEO4J_USERNAME);
+  console.log('Checking empty graph before legacy seed import.');
 
   const driver = neo4j.driver(
     process.env.NEO4J_URI,
@@ -15,6 +14,8 @@ async function seedDatabase() {
   const session = driver.session();
 
   try {
+    const existing = await session.run('MATCH (n) RETURN 1 LIMIT 1');
+    if (existing.records.length) throw Error('Legacy seed requires an empty graph.');
     const seedPath = path.join(__dirname, '..', 'data', 'vedaai_seed.cypher');
     const content = fs.readFileSync(seedPath, 'utf-8');
 
@@ -22,7 +23,7 @@ async function seedDatabase() {
       .replace(/\/\/[^\n]*/g, '')
       .split(';')
       .map(s => s.trim())
-      .filter(s => s.length > 0);
+      .filter(s => s.length > 0 && !/\bDELETE\b/i.test(s));
 
     console.log(`Executing ${statements.length} Cypher statements...`);
 
@@ -65,6 +66,6 @@ async function seedDatabase() {
 }
 
 seedDatabase().catch(err => {
-  console.error('Seeding fatal error:', err);
+  console.error('Legacy seed import failed. Check the empty-graph requirement and database access.');
   process.exit(1);
 });

@@ -1,424 +1,586 @@
 require('dotenv').config();
+const crypto = require('crypto');
 const express = require('express');
-const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
 const { buildVedaAIPipeline } = require('./engine/pipeline');
-const visionAgent = require('./engine/vision_agent');
-const { handleClinicalFollowUp } = require('./engine/followup_agent');
-const labelAudit = require('./engine/label_audit');
-const neo4j = require('neo4j-driver');
+const defaultVisionAgent = require('./engine/vision_agent');
+const { handleClinicalFollowUp: defaultFollowUpHandler } = require('./engine/followup_agent');
+const defaultLabelAudit = require('./engine/label_audit');
+const {
+  getSharedDriver,
+  verifyNeo4jConnectivity,
+  closeSharedDriver
+} = require('./lib/neo4j_config');
+const { createRateLimiter } = require('./lib/rate_limit');
+const { defaultTraceStore } = require('./lib/trace_store');
+const {
+  scrubInternalText,
+  sanitizeConsultationResult,
+  sanitizeVisionScan,
+  sanitizeLabelAudit,
+  sanitizeFollowUp
+} = require('./lib/response_sanitizer');
+const {
+  ALLOWED_IMAGE_MIMES,
+  MAX_IMAGE_BYTES,
+  attachRequestId,
+  logServerError,
+  securityHeadersMiddleware,
+  noCacheApiMiddleware,
+  createCorsMiddleware,
+  extractAndValidateImage,
+  HttpError,
+  chatRequestSchema,
+  consultWithImageFieldsSchema,
+  scanBodySchema,
+  labelAuditFieldsSchema,
+  followUpRequestSchema,
+  feedbackRequestSchema,
+  parseWithSchema,
+  createErrorHandler
+} = require('./lib/security');
 
-const app = express();
-const PORT = process.env.PORT || 4000;
-
-// Configure multer for memory storage with image type filter
-const ALLOWED_IMAGE_TYPES = new Set([
-  'image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/bmp'
-]);
-
-const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB max
-  fileFilter: (_req, file, cb) => {
-    if (ALLOWED_IMAGE_TYPES.has(file.mimetype)) {
-      cb(null, true);
-    } else {
-      cb(new Error(`Unsupported image type: ${file.mimetype}. Accepted: JPEG, PNG, WebP, GIF, BMP.`));
-    }
-  }
-});
-
-app.use(cors());
-app.use(express.json({ limit: '15mb' }));
-app.use(express.urlencoded({ extended: true, limit: '15mb' }));
-app.use(express.static(path.join(__dirname, 'public')));
-
-// Initialize LangGraph Pipeline
-const pipeline = buildVedaAIPipeline();
-
-// Neo4j Driver for metadata endpoints
-const driver = neo4j.driver(
-  process.env.NEO4J_URI,
-  neo4j.auth.basic(process.env.NEO4J_USERNAME, process.env.NEO4J_PASSWORD)
-);
-
-// Multer error handler middleware
-function handleMulterError(err, _req, res, next) {
-  if (err instanceof multer.MulterError) {
-    if (err.code === 'LIMIT_FILE_SIZE') {
-      return res.status(413).json({ success: false, error: 'Image exceeds 10 MB size limit.' });
-    }
-    return res.status(400).json({ success: false, error: err.message });
-  }
-  if (err && err.message && err.message.startsWith('Unsupported image type')) {
-    return res.status(415).json({ success: false, error: err.message });
-  }
-  next(err);
+function parsePositiveInt(val, fallback) {
+  const num = Number(val);
+  return Number.isInteger(num) && num > 0 ? num : fallback;
 }
-app.use(handleMulterError);
 
-/**
- * Health check & status endpoint
- */
-app.get('/api/status', async (req, res) => {
-  try {
-    const session = driver.session();
-    const result = await session.run('MATCH (n) RETURN count(n) AS node_count');
-    const relResult = await session.run('MATCH ()-[r]->() RETURN count(r) AS rel_count');
-    await session.close();
+function patientProfile(body, prakriti, season) {
+  return {
+    prakriti: body.prakriti || prakriti, current_season: body.season || season,
+    chronic_conditions: body.conditions || [], allergies: body.allergies || [],
+    medications: body.medications || [], vikriti: body.vikriti, ageGroup: body.ageGroup,
+    biologicalSex: body.biologicalSex, dietaryPreference: body.dietaryPreference,
+    avoidAlcoholExtracts: body.avoidAlcoholExtracts || false
+  };
+}
 
-    res.json({
-      status: 'online',
-      neo4j: {
-        connected: true,
-        instanceId: process.env.AURA_INSTANCEID || 'ff765efc',
-        nodes: result.records[0].get('node_count').toInt(),
-        relationships: relResult.records[0].get('rel_count').toInt()
-      },
-      gemini: {
-        configured: Boolean(process.env.GEMINI_API_KEY),
-        model: require('./engine/llm_client').modelName || 'not configured',
-        embeddingModel: require('./engine/vector_store').MODEL_NAME,
-        embeddingDimensions: 3072
-      },
-      langgraph: {
-        status: 'active',
-        architecture: 'Five-stage Gemini debate with parallel Neo4j + vector retrieval'
-      }
-    });
-  } catch (err) {
-    res.status(500).json({ status: 'error', message: err.message });
+function assessmentProfile(body) {
+  const { prakriti, season, conditions, allergies, medications, ageGroup, biologicalSex, vikriti, dietaryPreference, avoidAlcoholExtracts } = body;
+  return { prakriti, current_season: season, chronic_conditions: conditions, allergies, medications, ageGroup, biologicalSex, vikriti, dietaryPreference, avoidAlcoholExtracts };
+}
+
+function missingCoverage(profile) {
+  const missing = [];
+  if (profile.medications.length) missing.push('Drug–herb interactions have not been verified.');
+  if (profile.allergies.length) missing.push('Allergen coverage has not been verified.');
+  if (profile.avoidAlcoholExtracts) missing.push('Alcohol content has not been verified.');
+  if (profile.dietaryPreference) missing.push('Dietary suitability has not been verified.');
+  if (profile.vikriti || profile.biologicalSex || profile.ageGroup) {
+    missing.push('Safety specific to age, sex or current Vikriti has not been independently verified.');
   }
-});
+  return missing;
+}
 
-/**
- * Get catalog of all 25 Classical Ayurvedic Herbs in Neo4j
- */
-app.get('/api/herbs', async (req, res) => {
-  try {
-    const session = driver.session();
-    const result = await session.run(`
-      MATCH (h:Herb)
-      OPTIONAL MATCH (h)-[r:PACIFIES]->(p:Dosha)
-      OPTIONAL MATCH (h)-[a:AGGRAVATES]->(ag:Dosha)
-      RETURN h.name AS name,
-             h.botanical_name AS botanical_name,
-             h.sanskrit_name AS sanskrit_name,
-             h.virya AS virya,
-             h.rasa AS rasa,
-             h.therapeutic_uses AS therapeutic_uses,
-             collect(DISTINCT p.name) AS pacifies,
-             collect(DISTINCT ag.name) AS aggravates
-      ORDER BY h.name ASC
-    `);
-    await session.close();
-
-    const herbs = result.records.map(r => r.toObject());
-    res.json({ count: herbs.length, herbs });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-/**
- * Primary Clinical Query Endpoint (Executes LangGraph 5-Agent Pipeline)
- */
-app.post('/api/chat', async (req, res) => {
-  const { query, prakriti, conditions, season } = req.body;
-
-  if (!query || !query.trim()) {
-    return res.status(400).json({ error: 'Query parameter is required' });
-  }
-
-  const startTime = Date.now();
-
-  try {
-    const finalState = await pipeline.invoke({
-      raw_query: query.trim(),
-      user_profile: {
-        prakriti: prakriti || 'Pitta-Vata',
-        chronic_conditions: Array.isArray(conditions)
-          ? conditions
-          : (conditions ? conditions.split(',').map(c => c.trim()) : []),
-        current_season: season || 'Grishma'
-      }
-    });
-
-    const durationMs = Date.now() - startTime;
-
-    res.json({
-      success: true,
-      durationMs,
-      result: finalState.final_response,
-      confidenceScore: finalState.confidence_score,
-      trace: {
-        canonicalEntities: finalState.canonical_entities,
-        retrievalPlan: finalState.retrieval_plan,
-        agentExecutions: finalState.agent_trace,
-        proponentDraft: finalState.proponent_draft,
-        opponentVerdict: finalState.opponent_verdict,
-        opponentFlags: finalState.opponent_flags,
-        graphFacts: {
-          herbDetails: finalState.graph_facts?.herbDetails || [],
-          doshaRelations: finalState.graph_facts?.doshaRelations || [],
-          seasonInfo: finalState.graph_facts?.seasonInfo || [],
-          conditionInfo: finalState.graph_facts?.conditionInfo || [],
-          contraindications: finalState.graph_facts?.contraindications || [],
-          alternatives: finalState.graph_facts?.alternatives || [],
-          vectorMatches: finalState.graph_facts?.vectorMatches || []
-        }
-      }
-    });
-  } catch (err) {
-    console.error('API execution error:', err);
-    res.status(500).json({
-      success: false,
-      error: err.message,
-      durationMs: Date.now() - startTime
-    });
-  }
-});
-
-/**
- * Phase 4: Multimodal Vision & OCR Endpoint
- * Scans packaging or herb photo and performs Neo4j Graph Membership Verification
- */
-app.post('/api/scan', upload.single('image'), async (req, res) => {
-  try {
-    let imageBuffer = null;
-    let mimeType = 'image/jpeg';
-
-    if (req.file) {
-      imageBuffer = req.file.buffer;
-      mimeType = req.file.mimetype;
-    } else if (req.body.imageBase64) {
-      const parts = req.body.imageBase64.split(';base64,');
-      if (parts.length === 2) {
-        mimeType = parts[0].replace('data:', '');
-        imageBuffer = Buffer.from(parts[1], 'base64');
-      } else {
-        imageBuffer = Buffer.from(req.body.imageBase64, 'base64');
-      }
-    } else {
-      return res.status(400).json({ error: 'No image uploaded' });
+function consultationResult(state, profile, unresolved = [], legacyAdapter = false) {
+  if (state.assessment) return require('./engine/evidence').publicResult(state.assessment);
+  if (!legacyAdapter) throw new Error('Missing validated consultation assessment.');
+  const result = sanitizeConsultationResult(state);
+  const missing = missingCoverage(profile);
+  if (unresolved.length) missing.unshift('Unverified ingredients: ' + unresolved.join(', ') + '.');
+  result.missing_coverage = missing;
+  result.status = unresolved.length ? 'PARTIAL_ASSESSMENT' : missing.length ? 'INSUFFICIENT_DATA' : 'ASSESSED';
+  if (missing.length) {
+    if (!/unsafe|contraindicated|caution|do not recommend/i.test(result.final_verdict)) {
+      result.final_verdict = result.status;
     }
-
-    const visionResult = await visionAgent.analyzeImage(imageBuffer, mimeType);
-    res.json({ success: true, scan: visionResult });
-  } catch (err) {
-    console.error('Vision analysis error:', err);
-    res.status(500).json({ success: false, error: err.message });
+    result.summary_message = 'Safety could not be established for the complete assessment.';
+    result.safety_warnings = [...new Set([...result.safety_warnings, ...missing])];
+    result.clinical_reasoning = [];
   }
-});
+  return result;
+}
+
+function unavailable(res, details) {
+  return res.status(503).json({ success: false, status: 'ANALYSIS_UNAVAILABLE',
+    error: 'Image analysis is temporarily unavailable. No classification was made.', ...details });
+}
 
 /**
- * Phase 4: End-to-End Multimodal Seeding & Clinical Consultation Endpoint
- * Takes image + user profile, seeds detected herb into LangGraph pipeline
+ * Create configured Express application. Supports dependency injection for testing
+ * while defaulting to live production agents, pipeline, and shared Neo4j driver.
  */
-app.post('/api/consult-with-image', upload.single('image'), async (req, res) => {
-  const startTime = Date.now();
-  try {
-    let imageBuffer = null;
-    let mimeType = 'image/jpeg';
+function createApp(deps = {}) {
+  const app = express();
+  app.disable('x-powered-by');
+  const trustedProxies = process.env.TRUSTED_PROXY_CIDRS?.split(',').map(value => value.trim()).filter(Boolean);
+  if (trustedProxies?.length) app.set('trust proxy', trustedProxies);
 
-    if (req.file) {
-      imageBuffer = req.file.buffer;
-      mimeType = req.file.mimetype;
-    } else if (req.body.imageBase64) {
-      const parts = req.body.imageBase64.split(';base64,');
-      if (parts.length === 2) {
-        mimeType = parts[0].replace('data:', '');
-        imageBuffer = Buffer.from(parts[1], 'base64');
-      } else {
-        imageBuffer = Buffer.from(req.body.imageBase64, 'base64');
-      }
-    } else {
-      return res.status(400).json({ error: 'Image is required' });
+  let defaultPipelineInstance = null;
+  const resolvePipeline = () => {
+    if (deps.pipeline) return deps.pipeline;
+    if (!defaultPipelineInstance) {
+      defaultPipelineInstance = buildVedaAIPipeline();
     }
+    return defaultPipelineInstance;
+  };
 
-    const { query, prakriti, conditions, season } = req.body;
+  const visionAgent = deps.visionAgent || defaultVisionAgent;
+  const labelAudit = deps.labelAudit || defaultLabelAudit;
+  const followUpHandler = deps.followUpHandler || defaultFollowUpHandler;
+  const traceStore = deps.traceStore || defaultTraceStore;
+  const resolveDriver = deps.driver
+    ? () => deps.driver
+    : () => getSharedDriver();
+  const checkDbHealth = deps.checkDbHealth || (() => verifyNeo4jConnectivity(resolveDriver()));
+  const feedbackFilePath = deps.feedbackFilePath || path.join(__dirname, 'data', 'clinical_feedback.jsonl');
 
-    // 1. Run Multimodal Vision Agent
-    const visionResult = await visionAgent.analyzeImage(imageBuffer, mimeType);
+  const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: MAX_IMAGE_BYTES, files: 1, fields: 72, fieldSize: 4096,
+      fieldNameSize: 64, parts: 73, fieldNestingDepth: 1, fieldArrayIndexLimit: 20 },
+    streamHandler: (req, parser) => {
+      parser.end(req.multipartBytes);
+      delete req.multipartBytes;
+    },
+    fileFilter: (_req, file, cb) => {
+      if (ALLOWED_IMAGE_MIMES.has(file.mimetype)) {
+        cb(null, true);
+      } else {
+        cb(new Error(`Unsupported image type: ${file.mimetype}.`));
+      }
+    }
+  });
 
-    if (!visionResult.is_ayurvedic_or_herbal) {
-      return res.json({
-        success: true,
-        isOutOfDomain: true,
-        scan: visionResult,
-        result: {
-          final_verdict: 'OUT_OF_DOMAIN',
-          confidence_score: visionResult.visual_confidence,
-          summary_message: 'The uploaded image does not appear to be an Ayurvedic medicine or medicinal plant. Please upload a clear photo of an Ayurvedic medicine container, supplement label, or raw herb.',
-          disclaimer: 'VedaAI Multimodal Gate strictly filters out-of-domain objects.'
+  // raw-body enforces the aggregate byte budget while reading, including chunked requests.
+  const boundedMultipart = express.raw({ type: 'multipart/form-data', limit: MAX_IMAGE_BYTES + 256 * 1024, inflate: false });
+  const parseFile = upload.single('image');
+  function parseMultipart(req, res, next) {
+    if (!req.is('multipart/form-data')) return next();
+    boundedMultipart(req, res, err => {
+      if (err) return next(err);
+      req.multipartBytes = req.body;
+      parseFile(req, res, error => {
+        delete req.multipartBytes;
+        if (error && !(error instanceof multer.MulterError) && !error.message.startsWith('Unsupported image type')) {
+          return next(new HttpError(400, 'Malformed multipart upload.'));
         }
+        next(error);
+      });
+    });
+  }
+
+  // Global security headers & request tracking
+  app.use(attachRequestId);
+  app.use(securityHeadersMiddleware());
+  app.use(express.static(path.join(__dirname, 'public')));
+
+  // API-wide cache disabling & restricted CORS policy
+  app.use('/api', noCacheApiMiddleware);
+  app.use('/api', createCorsMiddleware({ allowedOrigins: deps.allowedOrigins }));
+
+  const smallJsonParser = express.json({ limit: '256kb' });
+  const smallUrlParser = express.urlencoded({ extended: true, limit: '256kb' });
+  const largeJsonParser = express.json({ limit: '15mb' });
+  const largeUrlParser = express.urlencoded({ extended: true, limit: '15mb' });
+
+  const rlConfig = deps.rateLimits || {};
+  const defaultWindowMs = parsePositiveInt(rlConfig.windowMs ?? process.env.RATE_LIMIT_WINDOW_MS, 60 * 1000);
+
+  const readLimiter = createRateLimiter({
+    windowMs: rlConfig.read?.windowMs ?? defaultWindowMs,
+    max: parsePositiveInt(rlConfig.read?.max ?? process.env.RATE_LIMIT_READ_MAX, 120),
+    keyPrefix: 'read',
+    message: 'Too many catalog requests. Please try again shortly.'
+  });
+
+  const aiLimiter = createRateLimiter({
+    windowMs: rlConfig.ai?.windowMs ?? defaultWindowMs,
+    max: parsePositiveInt(rlConfig.ai?.max ?? process.env.RATE_LIMIT_AI_MAX, 20),
+    keyPrefix: 'ai',
+    message: 'Consultation rate limit reached. Please wait a minute before submitting another request.'
+  });
+
+  const visionLimiter = createRateLimiter({
+    windowMs: rlConfig.vision?.windowMs ?? defaultWindowMs,
+    max: parsePositiveInt(rlConfig.vision?.max ?? process.env.RATE_LIMIT_VISION_MAX, 10),
+    keyPrefix: 'vision',
+    message: 'Image upload rate limit reached. Please wait before scanning another label.'
+  });
+
+  const feedbackLimiter = createRateLimiter({
+    windowMs: rlConfig.feedback?.windowMs ?? defaultWindowMs,
+    max: parsePositiveInt(rlConfig.feedback?.max ?? process.env.RATE_LIMIT_FEEDBACK_MAX, 15),
+    keyPrefix: 'feedback',
+    message: 'Too many feedback submissions. Please try again later.'
+  });
+
+  // Hold a process-wide slot through parsing and model execution, even if the
+  // client disconnects while a provider call is still running.
+  const maxClinicalRequests = parsePositiveInt(deps.maxClinicalRequests ?? process.env.MAX_CLINICAL_REQUESTS, 8);
+  let activeClinicalRequests = 0;
+  function clinicalPost(route, limiter, ...handlers) {
+    const handler = handlers.pop();
+    app.post(route, limiter, (_req, res, next) => {
+      if (activeClinicalRequests >= maxClinicalRequests) {
+        res.setHeader('Retry-After', '1');
+        return res.status(429).json({ success: false, error: 'Service is busy. Please retry shortly.' });
+      }
+      activeClinicalRequests++;
+      let released = false;
+      function release() {
+        if (!released) activeClinicalRequests--;
+        released = true;
+      }
+      res.locals.releaseClinicalSlot = release;
+      res.once('close', release);
+      next();
+    }, ...handlers, async (req, res, next) => {
+      const release = res.locals.releaseClinicalSlot;
+      res.off('close', release);
+      if (res.destroyed) { release(); return; }
+      try {
+        await handler(req, res, next);
+      } finally {
+        release();
+      }
+    });
+  }
+
+  /**
+   * Public health check — intentionally exposes no Aura IDs, node counts, or model config.
+   */
+  app.get('/api/status', readLimiter, async (req, res) => {
+    try {
+      await checkDbHealth();
+      res.json({
+        status: 'online',
+        catalogReady: true
+      });
+    } catch (err) {
+      logServerError('GET /api/status', err, req.requestId, 503);
+      res.status(503).json({
+        status: 'degraded',
+        catalogReady: false,
+        error: 'Service temporarily unavailable.'
       });
     }
+  });
 
-    // 2. Formulate query using detected herbs
-    const verifiedHerbs = visionResult.graph_membership?.verified_herbs?.map(h => h.canonical_name) || [];
-    const detectedNames = verifiedHerbs.length > 0 ? verifiedHerbs : (visionResult.detected_herbs || ['Ayurvedic Herbal Product']);
+  /**
+   * Public catalog of Ayurvedic herbs (metadata only; internal graph errors are sanitized).
+   */
+  app.get('/api/herbs', readLimiter, async (req, res, next) => {
+    let session = null;
+    try {
+      session = resolveDriver().session();
+      const result = await session.run(`
+        MATCH (h:Herb)
+        OPTIONAL MATCH (h)-[r:PACIFIES]->(p:Dosha)
+        OPTIONAL MATCH (h)-[a:AGGRAVATES]->(ag:Dosha)
+        RETURN h.name AS name,
+               h.botanical_name AS botanical_name,
+               h.sanskrit_name AS sanskrit_name,
+               h.virya AS virya,
+               h.rasa AS rasa,
+               h.therapeutic_uses AS therapeutic_uses,
+               collect(DISTINCT p.name) AS pacifies,
+               collect(DISTINCT ag.name) AS aggravates
+        ORDER BY h.name ASC LIMIT 500
+      `);
 
-    const effectiveQuery = query && query.trim()
-      ? `${query.trim()} (Item identified from photo: ${detectedNames.join(', ')})`
-      : `Can I take ${detectedNames.join(', ')}? Is it safe for my condition?`;
-
-    // 3. Execute LangGraph StateGraph pipeline
-    const finalState = await pipeline.invoke({
-      raw_query: effectiveQuery,
-      user_profile: {
-        prakriti: prakriti || 'Pitta-Vata',
-        chronic_conditions: Array.isArray(conditions)
-          ? conditions
-          : (conditions ? conditions.split(',').map(c => c.trim()) : []),
-        current_season: season || 'Grishma'
+      const herbs = result.records.map(r => {
+        const obj = r.toObject();
+        return {
+          ...Object.fromEntries(['name', 'botanical_name', 'sanskrit_name', 'virya', 'rasa', 'therapeutic_uses']
+            .map(key => [key, scrubInternalText(obj[key])])),
+          pacifies: (obj.pacifies || []).map(scrubInternalText), aggravates: (obj.aggravates || []).map(scrubInternalText)
+        };
+      });
+      res.json({ count: herbs.length, herbs });
+    } catch (err) {
+      next(err);
+    } finally {
+      if (session) {
+        await session.close().catch(() => {});
       }
-    });
+    }
+  });
 
-    const durationMs = Date.now() - startTime;
+  /**
+   * Primary Clinical Consultation Endpoint.
+   * Executes internal 5-agent workflow, stores detailed trace server-side,
+   * and returns only patient-safe plain-language clinical guidance.
+   */
+  clinicalPost('/api/chat', aiLimiter, smallJsonParser, smallUrlParser, async (req, res, next) => {
+    const startTime = Date.now();
+    try {
+      const body = parseWithSchema(chatRequestSchema, req.body);
+      const profile = patientProfile(body, 'Pitta-Vata', 'Grishma');
 
-    res.json({
-      success: true,
-      durationMs,
-      scan: visionResult,
-      result: finalState.final_response,
-      confidenceScore: finalState.confidence_score,
-      trace: {
+      const consultationId = crypto.randomUUID();
+      const finalState = await resolvePipeline().invoke({
+        consultationId, requestId: req.requestId, raw_query: body.query,
+        user_profile: assessmentProfile(body)
+      });
+
+      const durationMs = Date.now() - startTime;
+
+      const result = consultationResult(finalState, profile, [], Boolean(deps.pipeline));
+      traceStore.saveTrace(consultationId, 'consultation', {
+        consultationContext: result, patientContext: finalState.user_profile,
+        durationMs,
+        requestId: req.requestId,
         canonicalEntities: finalState.canonical_entities,
         retrievalPlan: finalState.retrieval_plan,
         agentExecutions: finalState.agent_trace,
         proponentDraft: finalState.proponent_draft,
         opponentVerdict: finalState.opponent_verdict,
         opponentFlags: finalState.opponent_flags,
-        graphFacts: finalState.graph_facts
+        graphFacts: finalState.graph_facts,
+        evidenceConfidence: finalState.final_response?.evidence_confidence,
+        judgeCertainty: finalState.judge_certainty
+      });
+
+      res.json({
+        success: true,
+        consultationId,
+        durationMs,
+        confidenceScore: Number.isFinite(finalState.confidence_score) ? finalState.confidence_score : null,
+        result
+      });
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  /**
+   * Multimodal Vision Scan Endpoint (signature-validated image upload).
+   */
+  clinicalPost('/api/scan', visionLimiter, largeJsonParser, largeUrlParser, parseMultipart, async (req, res, next) => {
+    try {
+      parseWithSchema(scanBodySchema, req.body);
+      const { imageBuffer, mimeType } = extractAndValidateImage(req, { minBytes: 32 });
+      const visionResult = await visionAgent.analyzeImage(imageBuffer, mimeType);
+      if (visionResult.status === 'ANALYSIS_UNAVAILABLE') return unavailable(res, { scan: sanitizeVisionScan(visionResult) });
+      const scanId = crypto.randomUUID();
+
+      traceStore.saveTrace(scanId, 'scan', {
+        requestId: req.requestId,
+        visionResult
+      });
+
+      res.json({
+        success: true,
+        scanId,
+        scan: sanitizeVisionScan(visionResult)
+      });
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  /**
+   * Multimodal Consultation Endpoint (image + text -> patient-safe consultation result).
+   */
+  clinicalPost('/api/consult-with-image', visionLimiter, largeJsonParser, largeUrlParser, parseMultipart, async (req, res, next) => {
+    const startTime = Date.now();
+    try {
+      const body = parseWithSchema(consultWithImageFieldsSchema, req.body);
+      const { imageBuffer, mimeType } = extractAndValidateImage(req, { minBytes: 32 });
+
+      const visionResult = await visionAgent.analyzeImage(imageBuffer, mimeType);
+      const sanitizedScan = sanitizeVisionScan(visionResult);
+      const consultationId = crypto.randomUUID();
+
+      if (sanitizedScan.status === 'ANALYSIS_UNAVAILABLE') return unavailable(res, { scan: sanitizedScan });
+      if (!visionResult.is_ayurvedic_or_herbal) {
+        traceStore.saveTrace(consultationId, 'consult_with_image_ood', {
+          requestId: req.requestId,
+          visionResult
+        });
+
+        return res.json({
+          success: true,
+          consultationId,
+          isOutOfDomain: true,
+          scan: sanitizedScan,
+          result: {
+            final_verdict: 'OUT_OF_DOMAIN',
+            confidence_score: sanitizedScan.visual_confidence,
+            summary_message:
+              'The uploaded image does not appear to be an Ayurvedic medicine or medicinal plant. Please upload a clear photo of an Ayurvedic medicine container, supplement label, or raw herb.',
+            disclaimer: 'Non-herbal items are excluded from clinical evaluation.'
+          }
+        });
       }
-    });
-  } catch (err) {
-    console.error('Multimodal consultation error:', err);
-    res.status(500).json({ success: false, error: err.message, durationMs: Date.now() - startTime });
-  }
-});
 
-/**
- * Multi-Turn Clinical Follow-Up Q&A Endpoint
- * Handles follow-up questions about dosage, Anupana, diet, and precautions
- */
-app.post('/api/follow-up', async (req, res) => {
-  try {
-    const { followUpQuery, consultationContext, history } = req.body;
-    if (!followUpQuery || !followUpQuery.trim()) {
-      return res.status(400).json({ error: 'Follow-up query is required' });
+      const verifiedHerbs = visionResult.graph_membership?.verified_herbs?.map(h => h.canonical_name) || [];
+      const detectedNames = verifiedHerbs;
+      const unresolvedIngredients = sanitizedScan.catalog_verification.unverified_herbs.length
+        ? sanitizedScan.catalog_verification.unverified_herbs : detectedNames.length ? [] : ['Ingredient identity unavailable'];
+      const profile = patientProfile(body, 'Pitta-Vata', 'Grishma');
+      const effectiveQuery = body.query && body.query.trim()
+        ? `${body.query.trim()} (Item identified from photo: ${detectedNames.join(', ')})`
+        : `Can I take ${detectedNames.join(', ')}? Is it safe for my condition?`;
+
+      const finalState = await resolvePipeline().invoke({
+        consultationId, requestId: req.requestId, unresolved: unresolvedIngredients,
+        raw_query: effectiveQuery, user_profile: assessmentProfile(body)
+      });
+
+      const durationMs = Date.now() - startTime;
+
+      const result = consultationResult(finalState, profile, sanitizedScan.catalog_verification.unverified_herbs, Boolean(deps.pipeline));
+      traceStore.saveTrace(consultationId, 'consult_with_image', {
+        consultationContext: result, patientContext: finalState.user_profile,
+        durationMs,
+        requestId: req.requestId,
+        visionResult,
+        canonicalEntities: finalState.canonical_entities,
+        retrievalPlan: finalState.retrieval_plan,
+        agentExecutions: finalState.agent_trace,
+        proponentDraft: finalState.proponent_draft,
+        opponentVerdict: finalState.opponent_verdict,
+        opponentFlags: finalState.opponent_flags,
+        graphFacts: finalState.graph_facts,
+        evidenceConfidence: finalState.final_response?.evidence_confidence,
+        judgeCertainty: finalState.judge_certainty
+      });
+
+      res.json({
+        success: true,
+        consultationId,
+        durationMs,
+        scan: sanitizedScan,
+        confidenceScore: Number.isFinite(finalState.confidence_score) ? finalState.confidence_score : null,
+        result
+      });
+    } catch (err) {
+      next(err);
     }
+  });
 
-    const followUpResult = await handleClinicalFollowUp({
-      followUpQuery: followUpQuery.trim(),
-      consultationContext: consultationContext || {},
-      history: history || []
-    });
+  /**
+   * Multi-Turn Clinical Follow-Up Q&A Endpoint.
+   */
+  clinicalPost('/api/follow-up', aiLimiter, smallJsonParser, smallUrlParser, async (req, res, next) => {
+    try {
+      const body = parseWithSchema(followUpRequestSchema, req.body);
+      const context = traceStore.getTrace(body.consultationId)?.payload.consultationContext;
+      const followUpResult = context
+        ? await followUpHandler({ followUpQuery: body.followUpQuery, consultationContext: context })
+        : { status: 'INSUFFICIENT_CONTEXT', reply: 'This consultation is missing or expired. Start a new assessment.' };
 
-    res.json({
-      success: true,
-      data: followUpResult
-    });
-  } catch (err) {
-    console.error('Follow-up error:', err);
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-/**
- * Label Audit: Ingredient-by-Ingredient Product Safety Analysis
- * Extracts ingredients from a label photo, verifies each against the herb
- * catalog, and runs per-ingredient graph safety checks.
- */
-app.post('/api/label-audit', upload.single('image'), async (req, res) => {
-  const startTime = Date.now();
-  try {
-    let imageBuffer = null;
-    let mimeType = 'image/jpeg';
-
-    if (req.file) {
-      imageBuffer = req.file.buffer;
-      mimeType = req.file.mimetype;
-    } else if (req.body.imageBase64) {
-      const parts = req.body.imageBase64.split(';base64,');
-      if (parts.length === 2) {
-        mimeType = parts[0].replace('data:', '');
-        imageBuffer = Buffer.from(parts[1], 'base64');
-      } else {
-        imageBuffer = Buffer.from(req.body.imageBase64, 'base64');
-      }
-    } else {
-      return res.status(400).json({ success: false, error: 'Image is required. Upload a photo of a supplement or medicine label.' });
+      res.json({
+        success: true,
+        data: sanitizeFollowUp(followUpResult)
+      });
+    } catch (err) {
+      next(err);
     }
+  });
 
-    if (imageBuffer.length < 1024) {
-      return res.status(400).json({ success: false, error: 'Image appears empty or too small. Please upload a clear photo.' });
+  /**
+   * Product Label Safety Audit Endpoint (signature-validated upload, patient-safe output).
+   */
+  clinicalPost('/api/label-audit', visionLimiter, largeJsonParser, largeUrlParser, parseMultipart, async (req, res, next) => {
+    const startTime = Date.now();
+    try {
+      const body = parseWithSchema(labelAuditFieldsSchema, req.body);
+      const { imageBuffer, mimeType } = extractAndValidateImage(req, { minBytes: 1024 });
+
+      const profile = patientProfile(body, 'Tridoshic', 'Hemanta');
+      const result = await labelAudit.auditLabel(imageBuffer, mimeType, {
+        ...profile, season: profile.current_season, conditions: profile.chronic_conditions
+      });
+      const audit = sanitizeLabelAudit(result);
+      if (audit.status === 'ANALYSIS_UNAVAILABLE') return unavailable(res, { extraction: audit.extraction });
+      audit.missing_coverage = missingCoverage(profile);
+      if (audit.status === 'ASSESSED' && audit.missing_coverage.length) audit.status = 'INSUFFICIENT_DATA';
+
+      const durationMs = Date.now() - startTime;
+      const auditId = crypto.randomUUID();
+
+      traceStore.saveTrace(auditId, 'label_audit', {
+        durationMs,
+        requestId: req.requestId,
+        rawResult: result
+      });
+
+      res.json({
+        success: true,
+        auditId,
+        durationMs,
+        ...audit
+      });
+    } catch (err) {
+      next(err);
     }
+  });
 
-    const { prakriti, season, conditions } = req.body;
-    const conditionsArray = Array.isArray(conditions)
-      ? conditions
-      : (conditions ? conditions.split(',').map(c => c.trim()).filter(Boolean) : []);
+  /**
+   * Clinical Feedback Recording Endpoint (validated & sanitized JSONL append).
+   */
+  app.post('/api/feedback', feedbackLimiter, smallJsonParser, smallUrlParser, async (req, res, next) => {
+    try {
+      const body = parseWithSchema(feedbackRequestSchema, req.body);
+      const record = {
+        timestamp: new Date().toISOString(),
+        feedback: body.feedback
+      };
 
-    const result = await labelAudit.auditLabel(imageBuffer, mimeType, {
-      prakriti: prakriti || 'Tridoshic',
-      season: season || 'Hemanta',
-      conditions: conditionsArray
-    });
+      const feedbackDir = path.dirname(feedbackFilePath);
+      await fs.promises.mkdir(feedbackDir, { recursive: true });
+      await fs.promises.appendFile(feedbackFilePath, `${JSON.stringify(record)}\n`, { encoding: 'utf8', mode: 0o600 });
 
-    res.json({
-      success: true,
-      durationMs: Date.now() - startTime,
-      ...result
-    });
-  } catch (err) {
-    console.error('Label audit error:', err);
-    res.status(500).json({ success: false, error: err.message, durationMs: Date.now() - startTime });
-  }
-});
-
-/**
- * Clinical Verification Feedback Endpoint
- * Captures clinician or patient verification feedback on recommendation accuracy
- */
-app.post('/api/feedback', async (req, res) => {
-  try {
-    const { query, verdict, feedback, notes } = req.body;
-    const record = {
-      timestamp: new Date().toISOString(),
-      query: query || null,
-      verdict: verdict || null,
-      feedback: feedback || null,
-      notes: notes || null
-    };
-
-    const feedbackDir = path.join(__dirname, 'data');
-    if (!fs.existsSync(feedbackDir)) {
-      fs.mkdirSync(feedbackDir, { recursive: true });
+      res.json({
+        success: true,
+        message: 'Clinical feedback successfully recorded for safety calibration.'
+      });
+    } catch (err) {
+      next(err);
     }
-    const feedbackFile = path.join(feedbackDir, 'clinical_feedback.jsonl');
-    fs.appendFileSync(feedbackFile, JSON.stringify(record) + '\n', 'utf8');
+  });
 
-    console.log(`\n📋 [CLINICAL FEEDBACK SAVED] Verdict: "${verdict}" | Rating: ${feedback} | Note: "${notes || 'N/A'}"`);
-    res.json({
-      success: true,
-      message: 'Clinical feedback successfully recorded for safety calibration.'
+  // Unknown API route 404 JSON response
+  app.use('/api', (_req, res) => {
+    res.status(404).json({
+      success: false,
+      error: 'API endpoint not found.'
     });
-  } catch (err) {
-    console.error('Feedback recording error:', err);
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
+  });
 
-// Start Server
-app.listen(PORT, () => {
-  console.log(`\n═════════════════════════════════════════════════════════════════`);
-  console.log(`  🌿 VedaAI Web Application & API Server`);
-  console.log(`  Local URL:   http://localhost:${PORT}`);
-  console.log(`  API Status:  http://localhost:${PORT}/api/status`);
-  console.log(`  Herbs API:   http://localhost:${PORT}/api/herbs`);
-  console.log(`═════════════════════════════════════════════════════════════════\n`);
-});
+  // Centralized error sanitizer (prevents stack/path/provider leakage)
+  app.use(createErrorHandler());
+
+  return app;
+}
+
+async function stopServer(server) {
+  await new Promise((resolve, reject) => server.close(error => error ? reject(error) : resolve()));
+  await closeSharedDriver();
+}
+
+if (require.main === module) {
+  // Validate once at startup while retaining the partial-assessment paths during outages.
+  require('./lib/neo4j_config').getNeo4jCredentials();
+  if (!require('./engine/llm_client').isConfigured) console.warn('Model service is unconfigured. Specialist analysis and image extraction are unavailable.');
+  const PORT = process.env.PORT || 4000;
+  const app = createApp();
+  const server = app.listen(PORT, () => {
+    console.log('\n═════════════════════════════════════════════════════════════════');
+    console.log('  🌿 VedaAI Web Application & API Server');
+    console.log(`  Local URL:   http://localhost:${PORT}`);
+    console.log(`  API Status:  http://localhost:${PORT}/api/status`);
+    console.log('═════════════════════════════════════════════════════════════════\n');
+  });
+
+  let stopping = false;
+  const shutdown = async () => {
+    if (stopping) return;
+    stopping = true;
+    try {
+      await stopServer(server);
+    } catch (error) {
+      logServerError('shutdown', error);
+      process.exitCode = 1;
+    }
+  };
+  process.once('SIGINT', shutdown);
+  process.once('SIGTERM', shutdown);
+}
+
+module.exports = { createApp, stopServer };

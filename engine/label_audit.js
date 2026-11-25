@@ -12,13 +12,13 @@
 const fs = require('fs');
 const path = require('path');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
-const neo4j = require('neo4j-driver');
 const CypherQueryBuilder = require('./cypher_builder');
+const { getSharedDriver } = require('../lib/neo4j_config');
 
 class LabelAuditAgent {
   constructor() {
     this.apiKey = process.env.GEMINI_API_KEY;
-    if (this.apiKey) {
+    if (this.apiKey && this.apiKey !== 'YOUR_GEMINI_API_KEY') {
       this.genAI = new GoogleGenerativeAI(this.apiKey);
       this.candidateModels = [
         'gemini-flash-lite-latest',
@@ -27,12 +27,14 @@ class LabelAuditAgent {
         'gemini-2.5-flash-lite'
       ];
     }
-    const user = process.env.NEO4J_USERNAME || 'neo4j';
-    this.driver = neo4j.driver(
-      process.env.NEO4J_URI,
-      neo4j.auth.basic(user, process.env.NEO4J_PASSWORD)
-    );
-    this.cypherBuilder = new CypherQueryBuilder(this.driver);
+  }
+
+  getDriver() {
+    return getSharedDriver();
+  }
+
+  get cypherBuilder() {
+    return new CypherQueryBuilder(this.getDriver());
   }
 
   loadPrompt() {
@@ -47,10 +49,6 @@ class LabelAuditAgent {
    * Step 1: Send image to Gemini Vision and extract structured ingredient list
    */
   async extractIngredients(imageBuffer, mimeType) {
-    if (!this.apiKey) {
-      throw new Error('GEMINI_API_KEY is not configured.');
-    }
-
     const prompt = this.loadPrompt();
     const base64Data = imageBuffer.toString('base64');
     const imagePart = {
@@ -58,9 +56,9 @@ class LabelAuditAgent {
     };
 
     let parsed = null;
-    for (const modelName of this.candidateModels) {
+    for (const modelName of this.candidateModels || []) {
       try {
-        const model = this.genAI.getGenerativeModel({ model: modelName });
+        const model = this.genAI.getGenerativeModel({ model: modelName }, { timeout: 12000 });
         const result = await model.generateContent({
           contents: [{
             role: 'user',
@@ -71,28 +69,20 @@ class LabelAuditAgent {
           }],
           generationConfig: {
             responseMimeType: 'application/json',
-            temperature: 0.1
+            maxOutputTokens: 2400, temperature: 0.1
           }
         });
         parsed = JSON.parse(result.response.text());
-        if (parsed) break;
-      } catch (err) {
-        console.warn(`  ⚠️ Label audit model ${modelName} error: ${err.status || err.message}`);
-        continue;
+        if (typeof parsed?.is_supplement_label === 'boolean' &&
+            (!parsed.is_supplement_label || (Array.isArray(parsed.ingredients) &&
+            parsed.ingredients.length <= 40 && parsed.ingredients.every(i => typeof i === 'string' || (i && typeof (i.printed_name || i.name) === 'string'))))) break;
+        parsed = null;
+      } catch {
+        parsed = null;
       }
     }
 
-    if (!parsed) {
-      return {
-        product_name: 'Unreadable',
-        is_supplement_label: false,
-        ingredients: [],
-        extracted_ocr_text: '',
-        visual_confidence: 0,
-        summary: 'All vision models failed to process this image. Please try a clearer photo.',
-        extraction_failed: true
-      };
-    }
+    if (!parsed) return { status: 'ANALYSIS_UNAVAILABLE', extraction_failed: true };
 
     // Sanitize: ensure ingredients is always an array of objects
     if (!Array.isArray(parsed.ingredients)) {
@@ -141,7 +131,7 @@ class LabelAuditAgent {
       }
     }
 
-    const session = this.driver.session();
+    const session = this.getDriver().session();
     try {
       const cypher = `
         UNWIND $names AS queryName
@@ -158,11 +148,13 @@ class LabelAuditAgent {
                h.rasa AS rasa,
                queryName AS matched_query
       `;
-      const result = await session.run(cypher, { names: nameVariants });
+      const result = await session.run(cypher, { names: nameVariants }, {timeout: 5000});
       const matchedMap = new Map();
       for (const record of result.records) {
         const obj = record.toObject();
-        matchedMap.set(obj.matched_query.toLowerCase(), obj);
+        const key=obj.matched_query.toLowerCase();
+        const previous=matchedMap.get(key);
+        matchedMap.set(key, previous===undefined || previous?.botanical_name===obj.botanical_name ? obj : null);
       }
 
       const verified = [];
@@ -172,13 +164,8 @@ class LabelAuditAgent {
         const lookups = [ing.printed_name.toLowerCase()];
         if (ing.common_name) lookups.push(ing.common_name.toLowerCase());
 
-        let match = null;
-        for (const key of lookups) {
-          if (matchedMap.has(key)) {
-            match = matchedMap.get(key);
-            break;
-          }
-        }
+        const hits=lookups.filter(k=>matchedMap.has(k)).map(k=>matchedMap.get(k));
+        const match=hits.length && hits.every(h=>h && h.botanical_name===hits[0]?.botanical_name) ? hits[0] : null;
 
         if (match) {
           verified.push({
@@ -270,7 +257,7 @@ class LabelAuditAgent {
       results.push({
         ...herb,
         safety: {
-          verdict: flags.length > 0 ? 'FLAGGED' : 'SAFE',
+          verdict: flags.length > 0 ? 'FLAGGED' : 'INSUFFICIENT_EVIDENCE',
           flags: [...new Set(flags)],
           paths: [...new Set(paths)],
           reasoning: [...new Set(reasoning)]
@@ -294,6 +281,7 @@ class LabelAuditAgent {
     if (extraction.extraction_failed || !extraction.is_supplement_label) {
       console.log('  ❌ Not a supplement label or extraction failed.');
       return {
+        status: extraction.extraction_failed ? 'ANALYSIS_UNAVAILABLE' : 'OUT_OF_DOMAIN',
         extraction,
         ingredients: { verified: [], unverified: [], uncertain: [] },
         auditedIngredients: [],
@@ -327,6 +315,8 @@ class LabelAuditAgent {
     console.log(`  🏁 Audit complete. ${flaggedCount} ingredient(s) flagged.`);
 
     return {
+      status: !verification.verified.length ? 'INSUFFICIENT_DATA'
+        : verification.unverified.length || verification.uncertain.length ? 'PARTIAL_ASSESSMENT' : 'ASSESSED',
       extraction: {
         product_name: extraction.product_name,
         formulation_type: extraction.formulation_type,
@@ -343,15 +333,9 @@ class LabelAuditAgent {
         unverified: verification.unverified.length,
         uncertain: verification.uncertain.length,
         flagged: flaggedCount,
-        safe: audited.length - flaggedCount
+        safe: 0
       }
     };
-  }
-
-  async close() {
-    if (this.driver) {
-      await this.driver.close();
-    }
   }
 }
 

@@ -10,7 +10,7 @@ let model;
 function getModel() {
   const key = process.env.GEMINI_API_KEY;
   if (!key || key === 'YOUR_GEMINI_API_KEY') throw new Error('GEMINI_API_KEY is required for vector search.');
-  if (!model) model = new GoogleGenerativeAI(key).getGenerativeModel({ model: MODEL_NAME });
+  if (!model) model = new GoogleGenerativeAI(key).getGenerativeModel({ model: MODEL_NAME }, { timeout: 12000 });
   return model;
 }
 
@@ -41,11 +41,20 @@ function cosineSimilarity(a, b) {
   return dot / (Math.sqrt(normA) * Math.sqrt(normB));
 }
 
-function loadIndex(indexPath = INDEX_PATH) {
-  if (!fs.existsSync(indexPath)) throw new Error(`Vector index not found at ${indexPath}. Run node scripts/seed_vector_store.js first.`);
-  const index = JSON.parse(fs.readFileSync(indexPath, 'utf8'));
-  if (!Array.isArray(index.chunks)) throw new Error('Vector index has no chunks array.');
-  return index.chunks;
+const indexCache = new Map();
+
+function loadIndex(indexPath = INDEX_PATH, { reload = false } = {}) {
+  const key = path.resolve(indexPath);
+  if (!reload && indexCache.has(key)) return indexCache.get(key);
+  const { chunks } = JSON.parse(fs.readFileSync(key, 'utf8'));
+  if (!Array.isArray(chunks) || !chunks.length || !chunks.every(chunk =>
+    typeof chunk?.text === 'string' && Array.isArray(chunk.embedding) &&
+    chunk.embedding.length === 3072 && chunk.embedding.every(Number.isFinite))) {
+    throw new Error('Invalid classical embedding index.');
+  }
+  chunks.forEach(chunk => { Object.freeze(chunk.embedding); Object.freeze(chunk); });
+  indexCache.set(key, Object.freeze(chunks));
+  return chunks;
 }
 
 async function search(queryText, topK = 3) {

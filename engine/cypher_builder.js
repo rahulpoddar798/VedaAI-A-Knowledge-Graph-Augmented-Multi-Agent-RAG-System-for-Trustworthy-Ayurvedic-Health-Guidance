@@ -15,7 +15,7 @@ class CypherQueryBuilder {
   async execute(statement, params = {}) {
     const session = this.driver.session();
     try {
-      const result = await session.run(statement, params);
+      const result = await session.run(statement, params, { timeout: 5000 });
       return result.records.map(record => record.toObject());
     } finally {
       await session.close();

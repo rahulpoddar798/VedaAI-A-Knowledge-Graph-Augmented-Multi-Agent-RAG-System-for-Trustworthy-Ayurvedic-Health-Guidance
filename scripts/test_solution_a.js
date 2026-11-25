@@ -1,7 +1,8 @@
 require('dotenv').config();
 const assert = require('assert');
 const { buildVedaAIPipeline } = require('../engine/pipeline');
-const { closeDriver, calculateEmpiricalConfidence } = require('../engine/agents');
+const { calculateEmpiricalConfidence } = require('../engine/agents');
+const { closeSharedDriver } = require('../lib/neo4j_config');
 const { loadIndex, cosineSimilarity } = require('../engine/vector_store');
 
 async function runCase(pipeline, name, query, user_profile) {
@@ -73,7 +74,7 @@ async function main() {
     assert.notStrictEqual(symptom.confidence_score, 0.95, 'Confidence appears to be a legacy hardcoded score.');
     console.log('\nSolution A live integration checks passed.');
   } finally {
-    await closeDriver();
+    await closeSharedDriver();
   }
 }
 
