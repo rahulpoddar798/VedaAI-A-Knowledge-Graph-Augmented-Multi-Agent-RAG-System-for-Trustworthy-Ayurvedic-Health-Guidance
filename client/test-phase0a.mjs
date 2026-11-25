@@ -18,7 +18,7 @@ test('assessment and transparency render only evidence belonging to the selected
   const profile = { ...DEFAULT_PROFILE, medications: ['fixture medication'], season: 'Winter' };
   appendClinicalProfile(form, profile);
   for (const [key, value] of Object.entries(clinicalProfile(profile))) {
-    assert.deepEqual(form.getAll(key), value === undefined ? [] : Array.isArray(value) ? value : [String(value)]);
+    assert.deepEqual(form.getAll(Array.isArray(value) ? key + '[]' : key), value === undefined ? [] : Array.isArray(value) ? value : [String(value)]);
   }
   assert.equal(form.has('fullName'), false);
 
@@ -92,7 +92,8 @@ test('graph screen consumes the read-only graph API and distinguishes empty and 
   t.after(() => new Promise(resolve => http.close(resolve)));
   const server = await createServer({ root: fileURLToPath(new URL('.', import.meta.url)), server: { middlewareMode: true, hmr: false }, appType: 'custom' });
   t.after(() => server.close());
-  const { fetchGraph, GraphView } = await server.ssrLoadModule('/src/screens/KnowledgeGraphScreen.tsx');
+  const { fetchGraph } = await server.ssrLoadModule('/src/data/graph.ts');
+  const { GraphView } = await server.ssrLoadModule('/src/screens/KnowledgeGraphScreen.tsx');
   const fetchHttp = globalThis.fetch;
   t.mock.method(globalThis, 'fetch', (url, options) => fetchHttp('http://127.0.0.1:' + http.address().port + url, options));
   const graph = await fetchGraph();

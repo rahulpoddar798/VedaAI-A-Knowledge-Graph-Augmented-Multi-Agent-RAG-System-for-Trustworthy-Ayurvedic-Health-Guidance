@@ -49,16 +49,6 @@ function parsePositiveInt(val, fallback) {
   return Number.isInteger(num) && num > 0 ? num : fallback;
 }
 
-function patientProfile(body, prakriti, season) {
-  return {
-    prakriti: body.prakriti || prakriti, current_season: body.season || season,
-    chronic_conditions: body.conditions || [], allergies: body.allergies || [],
-    medications: body.medications || [], vikriti: body.vikriti, ageGroup: body.ageGroup,
-    biologicalSex: body.biologicalSex, dietaryPreference: body.dietaryPreference,
-    avoidAlcoholExtracts: body.avoidAlcoholExtracts || false
-  };
-}
-
 function assessmentProfile(body) {
   const { prakriti, season, conditions, allergies, medications, ageGroup, biologicalSex, vikriti, dietaryPreference, avoidAlcoholExtracts } = body;
   return { prakriti, current_season: season, chronic_conditions: conditions, allergies, medications, ageGroup, biologicalSex, vikriti, dietaryPreference, avoidAlcoholExtracts };
@@ -66,8 +56,8 @@ function assessmentProfile(body) {
 
 function missingCoverage(profile) {
   const missing = [];
-  if (profile.medications.length) missing.push('Drug–herb interactions have not been verified.');
-  if (profile.allergies.length) missing.push('Allergen coverage has not been verified.');
+  if (profile.medications?.length) missing.push('Drug–herb interactions have not been verified.');
+  if (profile.allergies?.length) missing.push('Allergen coverage has not been verified.');
   if (profile.avoidAlcoholExtracts) missing.push('Alcohol content has not been verified.');
   if (profile.dietaryPreference) missing.push('Dietary suitability has not been verified.');
   if (profile.vikriti || profile.biologicalSex || profile.ageGroup) {
@@ -76,35 +66,21 @@ function missingCoverage(profile) {
   return missing;
 }
 
-function scrubPublicAssessmentResult(result) {
-  const scrub = (value) => (typeof value === 'string' ? scrubInternalText(value) : value);
-  return {
-    ...result,
-    summary_message: scrub(result.summary_message),
-    safety_warnings: Array.isArray(result.safety_warnings) ? result.safety_warnings.map(scrub) : [],
-    assessment: result.assessment
-      ? {
-          ...result.assessment,
-          verdict: {
-            ...result.assessment.verdict,
-            explanation: scrub(result.assessment.verdict.explanation),
-            rules: (result.assessment.verdict.rules || []).map((r) => ({ ...r, description: scrub(r.description) })),
-            coverage: (result.assessment.verdict.coverage || []).map((c) => ({ ...c, reason: scrub(c.reason), findings: (c.findings || []).map(scrub) })),
-          },
-          ledger: (result.assessment.ledger || []).map((e) => ({
-            ...e,
-            title: e.title ? scrub(e.title) : null,
-            location: e.location ? scrub(e.location) : null,
-            excerpt: scrub(e.excerpt),
-          })),
-          findings: (result.assessment.findings || []).map((f) => ({ ...f, text: scrub(f.text) })),
-        }
-      : result.assessment,
-  };
+function publicAssessment(state, id) {
+  const { assessment, publicResult } = require('./engine/evidence');
+  const validated = assessment.parse(state.assessment);
+  if (validated.verdict.consultationId !== id || validated.verdict.category === 'permitted') {
+    throw new Error('Invalid adjudication for consultation.');
+  }
+  // The schema first projects only public fields. Scrub all nested text, including
+  // source metadata and structured facts, then validate the resulting references.
+  const scrubbed = JSON.parse(JSON.stringify(validated, (_key, value) =>
+    typeof value === 'string' ? scrubInternalText(value) : value));
+  return publicResult(scrubbed);
 }
 
-function consultationResult(state, profile, unresolved = [], legacyAdapter = false) {
-  if (state.assessment) return scrubPublicAssessmentResult(require('./engine/evidence').publicResult(state.assessment));
+function consultationResult(state, profile, id, unresolved = [], legacyAdapter = false) {
+  if (state.assessment) return publicAssessment(state, id);
   if (!legacyAdapter) throw new Error('Missing validated consultation assessment.');
   const result = sanitizeConsultationResult(state);
   const missing = missingCoverage(profile);
@@ -339,14 +315,14 @@ function createApp(deps = {}) {
 
   /**
    * Primary Clinical Consultation Endpoint.
-   * Executes internal 5-agent workflow, stores detailed trace server-side,
+   * Executes the evidence assessment workflow, retains context server-side,
    * and returns only patient-safe plain-language clinical guidance.
    */
   clinicalPost('/api/chat', aiLimiter, smallJsonParser, smallUrlParser, async (req, res, next) => {
     const startTime = Date.now();
     try {
       const body = parseWithSchema(chatRequestSchema, req.body);
-      const profile = patientProfile(body, 'Pitta-Vata', 'Grishma');
+      const profile = assessmentProfile(body);
 
       const consultationId = crypto.randomUUID();
       const finalState = await resolvePipeline().invoke({
@@ -356,9 +332,9 @@ function createApp(deps = {}) {
 
       const durationMs = Date.now() - startTime;
 
-      const result = consultationResult(finalState, profile, [], Boolean(deps.pipeline));
+      const result = consultationResult(finalState, profile, consultationId, [], deps.legacyTestAdapter);
       traceStore.saveTrace(consultationId, 'consultation', {
-        consultationContext: result, patientContext: finalState.user_profile,
+        consultationContext: result, patientContext: profile, history: [],
         durationMs,
         requestId: req.requestId,
         canonicalEntities: finalState.canonical_entities,
@@ -392,7 +368,8 @@ function createApp(deps = {}) {
       parseWithSchema(scanBodySchema, req.body);
       const { imageBuffer, mimeType } = extractAndValidateImage(req, { minBytes: 32 });
       const visionResult = await visionAgent.analyzeImage(imageBuffer, mimeType);
-      if (visionResult.status === 'ANALYSIS_UNAVAILABLE') return unavailable(res, { scan: sanitizeVisionScan(visionResult) });
+      const scan = sanitizeVisionScan(visionResult);
+      if (scan.status === 'ANALYSIS_UNAVAILABLE') return unavailable(res, { scan });
       const scanId = crypto.randomUUID();
 
       traceStore.saveTrace(scanId, 'scan', {
@@ -403,7 +380,7 @@ function createApp(deps = {}) {
       res.json({
         success: true,
         scanId,
-        scan: sanitizeVisionScan(visionResult)
+        scan
       });
     } catch (err) {
       next(err);
@@ -449,7 +426,7 @@ function createApp(deps = {}) {
       const detectedNames = verifiedHerbs;
       const unresolvedIngredients = sanitizedScan.catalog_verification.unverified_herbs.length
         ? sanitizedScan.catalog_verification.unverified_herbs : detectedNames.length ? [] : ['Ingredient identity unavailable'];
-      const profile = patientProfile(body, 'Pitta-Vata', 'Grishma');
+      const profile = assessmentProfile(body);
       const labelNote = detectedNames.length
         ? `Item identified from photo: ${detectedNames.join(', ')}`
         : 'Uploaded herbal product could not be verified in the catalog';
@@ -466,9 +443,9 @@ function createApp(deps = {}) {
 
       const durationMs = Date.now() - startTime;
 
-      const result = consultationResult(finalState, profile, sanitizedScan.catalog_verification.unverified_herbs, Boolean(deps.pipeline));
+      const result = consultationResult(finalState, profile, consultationId, unresolvedIngredients, deps.legacyTestAdapter);
       traceStore.saveTrace(consultationId, 'consult_with_image', {
-        consultationContext: result, patientContext: finalState.user_profile,
+        consultationContext: result, patientContext: profile, history: [],
         durationMs,
         requestId: req.requestId,
         visionResult,
@@ -502,15 +479,29 @@ function createApp(deps = {}) {
   clinicalPost('/api/follow-up', aiLimiter, smallJsonParser, smallUrlParser, async (req, res, next) => {
     try {
       const body = parseWithSchema(followUpRequestSchema, req.body);
-      const context = traceStore.getTrace(body.consultationId)?.payload.consultationContext;
-      const followUpResult = context
-        ? await followUpHandler({ followUpQuery: body.followUpQuery, consultationContext: context })
-        : { status: 'INSUFFICIENT_CONTEXT', reply: 'This consultation is missing or expired. Start a new assessment.' };
-
-      res.json({
-        success: true,
-        data: sanitizeFollowUp(followUpResult)
-      });
+      const payload = traceStore.getTrace(body.consultationId)?.payload;
+      const context = payload?.consultationContext;
+      if (!context) return res.json({ success: true, data: sanitizeFollowUp({
+        status: 'INSUFFICIENT_CONTEXT', reply: 'This consultation is unavailable. Start a new assessment.'
+      }) });
+      if (payload.followUpPending) throw new HttpError(409, 'A follow-up is in progress for this consultation.');
+      const originalIds = new Set(context.assessment?.ledger.map(e => e.id));
+      if (body.evidenceIds?.some(id => !originalIds.has(id))) throw new HttpError(400, 'Invalid consultation evidence reference.');
+      payload.followUpPending = true;
+      try {
+        const result = await followUpHandler({
+          followUpQuery: body.followUpQuery, consultationContext: context,
+          patientContext: payload.patientContext, history: payload.history || [], evidenceIds: body.evidenceIds || []
+        });
+        const data = sanitizeFollowUp(result, originalIds);
+        data.final_verdict = context.final_verdict;
+        data.restrictions = context.safety_warnings || [];
+        payload.history = [...(payload.history || []), { question: body.followUpQuery, reply: data.reply,
+          status: data.status, evidenceIds: data.evidenceIds }].slice(-8);
+        return res.json({ success: true, data });
+      } finally {
+        payload.followUpPending = false;
+      }
     } catch (err) {
       next(err);
     }
@@ -525,7 +516,7 @@ function createApp(deps = {}) {
       const body = parseWithSchema(labelAuditFieldsSchema, req.body);
       const { imageBuffer, mimeType } = extractAndValidateImage(req, { minBytes: 1024 });
 
-      const profile = patientProfile(body, 'Tridoshic', 'Hemanta');
+      const profile = assessmentProfile(body);
       const result = await labelAudit.auditLabel(imageBuffer, mimeType, {
         ...profile, season: profile.current_season, conditions: profile.chronic_conditions
       });

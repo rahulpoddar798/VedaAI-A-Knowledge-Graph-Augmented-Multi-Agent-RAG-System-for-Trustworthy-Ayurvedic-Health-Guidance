@@ -17,7 +17,7 @@ const root = path.join(__dirname, '..');
 const tulsi = fs.readFileSync(path.join(root, 'test_assets/tulsi_label.png'));
 
 async function api(t, deps = {}) {
-  const app = createApp({ traceStore: new TraceStore(), ...deps });
+  const app = createApp({ legacyTestAdapter: true, traceStore: new TraceStore(), ...deps });
   const server = app.listen(0, '127.0.0.1');
   await once(server, 'listening');
   t.after(() => new Promise(resolve => server.close(resolve)));
@@ -113,11 +113,8 @@ test('follow-up resolves only its server record, preserves restrictions and fail
 
   const consultationContext = sanitizeConsultationResult(state());
   const request = { followUpQuery: 'What was assessed?', consultationContext };
-  const answered = await handleClinicalFollowUp(request, { generateJSON: async () => ({ index: 1 }) });
-  assert.equal(answered.reply, 'Adjudicated explanation.');
-  const outage = await handleClinicalFollowUp(request, { generateJSON: async () => { throw Error('offline'); } });
-  assert.deepEqual(Object.keys(outage).sort(), ['reply', 'status']);
-  assert.equal(outage.status, 'ANALYSIS_UNAVAILABLE');
+  assert.equal(handleClinicalFollowUp(request).status, 'INSUFFICIENT_DATA');
+
 });
 
 test('profile fields reach consultation and audit with explicit missing coverage', async t => {
@@ -190,7 +187,8 @@ test('DTOs reject unrelated nested fields and never adopt contradictory draft re
   const result = sanitizeConsultationResult(input);
   assert.deepEqual(result.clinical_reasoning, ['Verified warning']);
   assert.ok(!JSON.stringify(result).includes('Draft claims'));
-  const audit = sanitizeLabelAudit({ extraction: { secret: 'private' }, summary: { secret: 'private' },
+  assert.equal(sanitizeLabelAudit({ extraction: {} }).status, 'ANALYSIS_UNAVAILABLE');
+  const audit = sanitizeLabelAudit({ extraction: { is_supplement_label: true, secret: 'private' }, summary: { secret: 'private' },
     ingredients: { verified: [{ status: { secret: 'private' }, safety: { verdict: { secret: 'private' } } }] } });
   assert.ok(!JSON.stringify(audit).includes('private'));
   assert.ok(Object.values(audit.summary).every(Number.isInteger));
@@ -325,4 +323,17 @@ test('invalid structured provider output tries the next configured model', async
   }) }) };
   assert.deepEqual(await llm.generateJSON('fixture', {}), { valid: true });
   assert.equal(llm.modelName, 'fixture-2');
+});
+
+test('image catalog failure is visible and missing demographic fields stay omitted', async t => {
+  const agent = agentWithResponse(label, { is_supplement_label: true, ingredients: ['Tulsi'] });
+  agent.verifyIngredients = async () => ({ verified: [], unverified: [], uncertain: [] });
+  let observed;
+  agent.runSafetyAudit = async (_, profile) => { observed = profile; throw Error('private diagnostic'); };
+  const call = await api(t, { labelAudit: agent });
+  const response = await call('label-audit', { method: 'POST', body: form() });
+  assert.equal(response.status, 503);
+  assert.equal((await response.json()).status, 'CATALOG_UNAVAILABLE');
+  assert.equal(observed.season, undefined);
+  assert.equal(observed.prakriti, undefined);
 });

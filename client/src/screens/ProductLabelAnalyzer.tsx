@@ -257,8 +257,7 @@ export const ProductLabelAnalyzer: React.FC<ProductLabelAnalyzerProps> = ({
     const v = row.safety?.verdict;
     if (v === 'FLAGGED') return 'flagged';
     if (v === 'CAUTION') return 'caution';
-    if (v === 'INSUFFICIENT_EVIDENCE') return 'insufficient_evidence';
-    return 'verified';
+    return v === 'SAFE' && auditResult?.isSampleData ? 'verified' : 'insufficient_evidence';
   };
 
   const getRowSafetyLabel = (row: AuditIngredient): string => {
@@ -269,7 +268,7 @@ export const ProductLabelAnalyzer: React.FC<ProductLabelAnalyzerProps> = ({
     if (v === 'FLAGGED') return 'Flagged';
     if (v === 'CAUTION') return 'Caution';
     if (v === 'INSUFFICIENT_EVIDENCE') return 'Insufficient evidence';
-    return 'No graph flag';
+    return v === 'SAFE' && auditResult?.isSampleData ? 'Demo ? no graph flag' : 'Insufficient evidence';
   };
 
   const boxStyleMap: Record<
@@ -411,7 +410,7 @@ export const ProductLabelAnalyzer: React.FC<ProductLabelAnalyzerProps> = ({
       </div>
 
       {auditResult?.isSampleData && !loading && !errorMsg && (
-        <SampleNoticeBanner text="Currently displaying a pre-loaded demonstration label audit for your active profile. Upload any PNG/JPEG/WebP supplement label to run live multimodal OCR + Neo4j graph verification." />
+        <SampleNoticeBanner text="Currently displaying a demonstration audit with a fictional profile. Upload any PNG/JPEG/WebP supplement label to run live multimodal OCR + Neo4j graph verification." />
       )}
 
       {/* Error State */}

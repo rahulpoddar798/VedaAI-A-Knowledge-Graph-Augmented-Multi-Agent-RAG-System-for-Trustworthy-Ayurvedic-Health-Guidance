@@ -1,15 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ZoomIn, ZoomOut, RotateCcw, GitBranch, Info } from 'lucide-react';
 import { PageHeader } from '../components/ui/PageHeader';
-import { graphSchema } from '../../../shared/catalog.mjs';
+import { fetchGraph, type CatalogGraph } from '../data/graph';
 import { EmptyPanel, ErrorPanel, LoadingPanel } from '../components/ui/StatePanels';
-type CatalogGraph = ReturnType<typeof graphSchema.parse>;
-
-export async function fetchGraph(signal?: AbortSignal): Promise<CatalogGraph> {
-  const response = await fetch('/api/graph', { signal });
-  if (!response.ok) throw new Error('Graph catalog unavailable.');
-  return graphSchema.parse(await response.json());
-}
 import type { KGEdge, KGNode } from '../types/veda';
 
 const NODE_COLORS: Record<

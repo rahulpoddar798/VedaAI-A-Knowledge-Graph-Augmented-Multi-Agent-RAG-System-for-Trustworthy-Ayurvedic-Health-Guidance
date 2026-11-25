@@ -6,12 +6,12 @@ export function clinicalProfile(profile: PatientProfile) {
   const { prakriti, vikriti, season, conditions, medications, allergies, ageGroup, biologicalSex,
     dietaryPreference, avoidAlcoholExtracts } = profile;
   return { prakriti, vikriti, season, conditions: conditions.length ? conditions : undefined, medications: medications.length ? medications : undefined, allergies: allergies.length ? allergies : undefined, ageGroup, biologicalSex,
-    dietaryPreference, avoidAlcoholExtracts };
+    dietaryPreference, avoidAlcoholExtracts: avoidAlcoholExtracts || undefined };
 }
 
 export function appendClinicalProfile(form: FormData, profile: PatientProfile) {
   for (const [key, value] of Object.entries(clinicalProfile(profile))) {
-    if (Array.isArray(value)) value.forEach(item => form.append(key, item));
+    if (Array.isArray(value)) value.forEach(item => form.append(key + '[]', item));
     else if (value !== undefined) form.append(key, String(value));
   }
 }
@@ -59,4 +59,19 @@ export const emptySession: { records: ConsultationRecord[]; active: Consultation
 export function receiveConsultation(session: typeof emptySession, record: ConsultationRecord) {
   if (record.isSampleData !== false) return session;
   return { records: [record, ...session.records.filter(item => item.id !== record.id)], active: record };
+}
+
+const followUp = z.object({
+  status: z.enum(['ANSWERED', 'RESTRICTED', 'INSUFFICIENT_CONTEXT', 'INSUFFICIENT_DATA', 'ANALYSIS_UNAVAILABLE']),
+  reply: z.string().min(1), evidenceIds: z.array(z.string()).max(5),
+  final_verdict: z.string().optional(), restrictions: z.array(z.string()).optional()
+});
+
+export function followUpText(payload: unknown, record: ConsultationRecord) {
+  const data = followUp.parse(payload);
+  const ids = new Set(record.assessment?.ledger.map(entry => entry.id));
+  if ((!data.final_verdict && data.status !== 'INSUFFICIENT_CONTEXT') ||
+      (data.final_verdict && data.final_verdict !== record.verdictLabel) ||
+      data.evidenceIds.some(id => !ids.has(id))) throw new Error('Invalid follow-up response.');
+  return [data.reply, ...data.evidenceIds].join(' ');
 }

@@ -198,7 +198,7 @@ export const HealthProfileScreen: React.FC<HealthProfileScreenProps> = ({
 
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-[#26332D]">
-                Clinical Notes <span className="text-[#758078] font-normal">(Optional)</span>
+                Personal notes <span className="text-[#758078] font-normal">(this tab only, excluded from assessments)</span>
               </label>
               <textarea
                 rows={3}

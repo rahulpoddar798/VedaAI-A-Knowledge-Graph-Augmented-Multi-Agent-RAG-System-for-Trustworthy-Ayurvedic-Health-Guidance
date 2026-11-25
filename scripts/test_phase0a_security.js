@@ -243,6 +243,7 @@ test('Public API removes infrastructure IDs, raw traces, Cypher, and model IDs w
   const tempFeedback = path.join(os.tmpdir(), `vedaai-feedback-${Date.now()}.jsonl`);
 
   const app = createApp({
+    legacyTestAdapter: true,
     pipeline: { invoke: async () => makeMockPipelineState() },
     visionAgent: {
       analyzeImage: async () => ({
@@ -589,6 +590,7 @@ test('Internal exceptions do not expose filesystem paths, URIs, or stack traces'
 test('Rate limiting returns HTTP 429 and Retry-After when thresholds are exceeded', async () => {
   const realPng = fs.readFileSync(path.join(__dirname, '..', 'test_assets', 'tulsi_label.png'));
   const app = createApp({
+    legacyTestAdapter: true,
     pipeline: { invoke: async () => makeMockPipelineState() },
     visionAgent: {
       analyzeImage: async () => ({

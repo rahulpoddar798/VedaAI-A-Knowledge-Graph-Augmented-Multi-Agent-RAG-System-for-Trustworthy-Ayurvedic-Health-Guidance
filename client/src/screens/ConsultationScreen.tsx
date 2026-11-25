@@ -21,7 +21,7 @@ import {
   LoadingPanel,
   SampleNoticeBanner
 } from '../components/ui/StatePanels';
-import { clinicalProfile, appendClinicalProfile, mapConsultation } from '../data/consultation';
+import { clinicalProfile, appendClinicalProfile, followUpText, mapConsultation } from '../data/consultation';
 import type {
   ConsultationRecord,
   PatientProfile,
@@ -39,9 +39,6 @@ interface ConsultationScreenProps {
 interface FollowUpTurn {
   role: 'user' | 'assistant';
   content: string;
-  dosage?: string;
-  diet?: string;
-  precautions?: string;
 }
 
 const SUGGESTED_PROMPTS = [
@@ -153,16 +150,8 @@ export const ConsultationScreen: React.FC<ConsultationScreenProps> = ({
       });
       const json = await res.json();
       if (res.ok && json.success && json.data) {
-        setFollowUps(prev => [
-          ...prev,
-          {
-            role: 'assistant',
-            content: json.data.reply,
-            dosage: json.data.dosage_and_anupana,
-            diet: json.data.pathya_apathya,
-            precautions: json.data.precautions
-          }
-        ]);
+        const content = followUpText(json.data, activeConsultation);
+        setFollowUps(prev => [...prev, { role: 'assistant', content }]);
       } else {
         setFollowUps(prev => [
           ...prev,
@@ -172,7 +161,7 @@ export const ConsultationScreen: React.FC<ConsultationScreenProps> = ({
     } catch {
       setFollowUps(prev => [
         ...prev,
-        { role: 'assistant', content: 'Network error while requesting follow-up guidance.' }
+        { role: 'assistant', content: 'The follow-up service could not provide a valid response.' }
       ]);
     } finally {
       setFollowUpLoading(false);
@@ -547,22 +536,6 @@ export const ConsultationScreen: React.FC<ConsultationScreenProps> = ({
                       {turn.role === 'user' ? 'Your Follow-Up' : 'VedaAI Follow-Up Guidance'}
                     </p>
                     <p className="text-[#26332D] leading-relaxed">{turn.content}</p>
-                    {turn.dosage && (
-                      <p className="text-[11px] text-[#758078]">
-                        <strong className="text-[#26332D]">Anupana / Dosing Note:</strong>{' '}
-                        {turn.dosage}
-                      </p>
-                    )}
-                    {turn.diet && (
-                      <p className="text-[11px] text-[#758078]">
-                        <strong className="text-[#26332D]">Pathya / Apathya:</strong> {turn.diet}
-                      </p>
-                    )}
-                    {turn.precautions && (
-                      <p className="text-[11px] text-[#945F14]">
-                        <strong>Precautions:</strong> {turn.precautions}
-                      </p>
-                    )}
                   </div>
                 ))}
               </div>

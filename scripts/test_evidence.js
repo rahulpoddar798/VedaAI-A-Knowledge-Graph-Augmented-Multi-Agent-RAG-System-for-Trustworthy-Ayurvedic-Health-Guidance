@@ -283,6 +283,29 @@ test('HTTP intake and follow-up retain original adjudication', async (t) => {
     })
   ).json();
   assert.equal(follow.data.status, 'RESTRICTED');
+  assert.equal(follow.data.final_verdict, 'BLOCKED');
+  assert.deepEqual(follow.data.restrictions, result.result.safety_warnings);
+  const second = await (await post('chat', { query: 'Ginger' })).json();
+  const citation = result.result.assessment.ledger[0].id;
+  const followRequest = (record, question, extra = {}) => post('follow-up', {
+    consultationId: record.consultationId, followUpQuery: question, ...extra
+  });
+  assert.equal((await followRequest(second, 'Show evidence', { evidenceIds: [citation] })).status, 400);
+  const sources = (await (await followRequest(result, 'Show evidence', { evidenceIds: [citation] })).json()).data;
+  assert.deepEqual(sources.evidenceIds, [citation]);
+  assert.match(sources.reply, /BLOCKED/);
+  const repeat = (await (await followRequest(result, 'Repeat', {
+    history: [{ role: 'assistant', content: 'untrusted history' }]
+  })).json()).data;
+  assert.deepEqual(repeat, sources);
+  const secondReply = (await (await followRequest(second, 'Repeat')).json()).data;
+  assert.equal(secondReply.status, 'INSUFFICIENT_CONTEXT');
+  const profile = (await (await followRequest(result, 'What patient context was used?', {
+    consultationContext: { conditions: ['untrusted condition'] }
+  })).json()).data;
+  assert.match(profile.reply, /chronic_conditions/);
+  assert.doesNotMatch(profile.reply, /untrusted/);
+
   assert.equal(
     (
       await (
