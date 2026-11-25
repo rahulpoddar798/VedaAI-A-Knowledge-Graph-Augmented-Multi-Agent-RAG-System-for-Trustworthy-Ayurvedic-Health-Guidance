@@ -29,25 +29,25 @@ export function AIAssessmentScreen({ consultation, allConsultations, onSelectCon
       <SafetyBadge status={consultation.status} size="md" />
       <p>{consultation.clinicalSummary}</p>
       {consultation.safetyWarnings.map(w => <p key={w}>{w}</p>)}
-      {a?.verdict.rules.map(rule => <div key={rule.ruleId}>{rule.ruleId} ? {rule.version} ? {rule.outcome}{references(rule.evidenceIds)}</div>)}
+      {a?.verdict.rules.map(rule => <div key={rule.ruleId}>{rule.ruleId} / {rule.version} / {rule.outcome}{references(rule.evidenceIds)}</div>)}
     </section>
     {a && <>
       <section className={panel}><h2>Assessment coverage</h2>
         {a.verdict.coverage.map(row => <div key={row.dimension}>
-          <strong>{row.dimension.replaceAll('_', ' ')}</strong> ? {row.status.replaceAll('_', ' ')}
+          <strong>{row.dimension.replaceAll('_', ' ')}</strong> / {row.status.replaceAll('_', ' ')}
           <p>{row.reason}</p>{row.missing.map(note => <p key={note}>{note}</p>)}{references(row.evidenceIds)}
         </div>)}
       </section>
       <section className={panel}><h2>Findings</h2>
         {!a.findings.length && <p>No evidence was selected. Safety remains unestablished.</p>}
-        {a.findings.map((f, i) => <div key={i}><strong>{f.role} ? {f.category}</strong><p>{f.text}</p>{references(f.evidenceIds)}</div>)}
+        {a.findings.map((f, i) => <div key={i}><strong>{f.role} / {f.category}</strong><p>{f.text}</p>{references(f.evidenceIds)}</div>)}
       </section>
       <section className={panel}><h2>Evidence ledger</h2>
         {!a.ledger.length && <p>No records retrieved.</p>}
         {a.ledger.map(e => <article key={e.id} id={e.id} className="border-t pt-3">
-          <strong>{e.title || 'Source title unavailable'}</strong> ? {e.kind} ? {e.verification.replaceAll('_', ' ')}
+          <strong>{e.title || 'Source title unavailable'}</strong> / {e.kind} / {e.verification.replaceAll('_', ' ')}
           <p>{e.excerpt}</p><p>{e.sourceId} {e.location}</p>
-          {Object.entries(e.metadata).map(([key, value]) => <p key={key}>{key} ? {value}</p>)}
+          {Object.entries(e.metadata).map(([key, value]) => <p key={key}>{key} / {value}</p>)}
           <small className="break-all">{e.id}</small>
         </article>)}
       </section>

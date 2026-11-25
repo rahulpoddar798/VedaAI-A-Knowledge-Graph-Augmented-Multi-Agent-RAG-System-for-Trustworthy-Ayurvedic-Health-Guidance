@@ -79,8 +79,8 @@ export const ConsultationHistoryScreen: React.FC<ConsultationHistoryScreenProps>
 
       {filtered.length === 0 ? (
         <EmptyPanel
-          title="No Matching Consultations"
-          description="No archived consultations match your current search or safety status filter."
+          title={consultations.length ? "No matching consultations" : "No consultations in this session"}
+          description={consultations.length ? "Try changing the search or status filter." : "Completed consultations appear here until you refresh or close the page."}
         />
       ) : (
         <section className="bg-white border border-[#DDE4DE] rounded-xl overflow-hidden">

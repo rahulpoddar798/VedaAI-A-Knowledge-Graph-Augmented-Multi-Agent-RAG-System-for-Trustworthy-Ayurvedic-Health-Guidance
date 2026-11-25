@@ -115,7 +115,6 @@ export default function App() {
           key={activeConsultation?.id}
           profile={profile}
           activeConsultation={activeConsultation}
-          backendOnline={backendOnline}
           onConsultationComplete={handleConsultationComplete}
           onNavigate={setActiveScreen}
         />

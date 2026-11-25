@@ -31,7 +31,6 @@ import type {
 interface ConsultationScreenProps {
   profile: PatientProfile;
   activeConsultation: ConsultationRecord | null;
-  backendOnline: boolean;
   onConsultationComplete: (record: ConsultationRecord) => void;
   onNavigate: (screen: ScreenId) => void;
 }
@@ -61,7 +60,6 @@ const SUGGESTED_PROMPTS = [
 export const ConsultationScreen: React.FC<ConsultationScreenProps> = ({
   profile,
   activeConsultation,
-  backendOnline,
   onConsultationComplete,
   onNavigate
 }) => {
@@ -142,7 +140,7 @@ export const ConsultationScreen: React.FC<ConsultationScreenProps> = ({
     try {
       const res = await fetch('/api/follow-up', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + activeConsultation.followUpToken },
         body: JSON.stringify({
           followUpQuery: text,
           consultationId: activeConsultation.id
@@ -169,7 +167,7 @@ export const ConsultationScreen: React.FC<ConsultationScreenProps> = ({
   };
 
   const handleFeedback = async (type: 'accurate' | 'discrepancy') => {
-    if (!backendOnline || !activeConsultation) return;
+    if (!activeConsultation || activeConsultation.isSampleData) return;
     try {
       const res = await fetch('/api/feedback', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -507,8 +505,8 @@ export const ConsultationScreen: React.FC<ConsultationScreenProps> = ({
             </div>
           </section>
 
-          {/* Follow-Up Q&A Thread */}
-          <section className="bg-white border border-[#DDE4DE] rounded-xl p-5 space-y-4">
+          {/* Follow-up is available for assessed records. */}
+          {activeConsultation.followUpToken && <section className="bg-white border border-[#DDE4DE] rounded-xl p-5 space-y-4">
             <div className="flex items-center gap-2 pb-3 border-b border-[#DDE4DE]">
               <MessageSquare className="w-4 h-4 text-[#173D32]" />
               <div>
@@ -558,7 +556,7 @@ export const ConsultationScreen: React.FC<ConsultationScreenProps> = ({
                 <span>{followUpLoading ? 'Sending...' : 'Ask'}</span>
               </button>
             </form>
-          </section>
+          </section>}
         </div>
       )}
     </div>

@@ -31,7 +31,7 @@ test('assessment and transparency render only evidence belonging to the selected
   });
   const id = randomUUID();
   const state = await workflow.invoke({ consultationId: id, raw_query: 'Ginger' });
-  const payload = { success: true, consultationId: id, result: state.final_response };
+  const payload = { success: true, followUpToken: 'x'.repeat(43), consultationId: id, result: state.final_response };
   const live = mapConsultation(payload, 'Fixture question', profile);
   const { emptySession, receiveConsultation } = await server.ssrLoadModule('/src/data/consultation.ts');
   assert.deepEqual(emptySession, { records: [], active: null });
@@ -43,6 +43,12 @@ test('assessment and transparency render only evidence belonging to the selected
   for (const phrase of ['Source row fixture', 'line 19', 'expert review required', 'not assessed', 'ev-', 'selected'])
     assert.ok(page.toLowerCase().includes(phrase.toLowerCase()), phrase);
   assert.doesNotMatch(page, /model confidence|reliability|retrieval coverage/i);
+  for (const category of ['blocked', 'restricted', 'expert_review_required', 'insufficient_evidence']) {
+    const example = structuredClone(payload);
+    example.result.assessment.verdict.category = category;
+    example.result.final_verdict = category.toUpperCase();
+    assert.equal(mapConsultation(example, '', profile).status, category);
+  }
   const stages = renderToStaticMarkup(createElement(AgentTransparencyScreen, { consultation: live }));
   assert.match(stages, /documents.{0,40}unavailable/);
   assert.doesNotMatch(stages, /Judge|latency/);

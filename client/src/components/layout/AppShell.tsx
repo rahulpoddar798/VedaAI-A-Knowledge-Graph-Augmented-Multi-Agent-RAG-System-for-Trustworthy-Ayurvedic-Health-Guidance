@@ -208,7 +208,7 @@ export const AppShell: React.FC<AppShellProps> = ({
               className="flex-1 inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-md border border-[#DDE4DE] text-[11px] font-medium text-[#26332D] hover:bg-[#F7F5EE] transition cursor-pointer"
             >
               <LogOut className="w-3 h-3 text-[#758078]" />
-              <span>Sign In</span>
+              <span>Demo views</span>
             </button>
           </div>
         </div>

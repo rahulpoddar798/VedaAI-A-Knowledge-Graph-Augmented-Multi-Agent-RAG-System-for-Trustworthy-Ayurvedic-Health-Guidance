@@ -333,7 +333,7 @@ function createApp(deps = {}) {
       const durationMs = Date.now() - startTime;
 
       const result = consultationResult(finalState, profile, consultationId, [], deps.legacyTestAdapter);
-      traceStore.saveTrace(consultationId, 'consultation', {
+      const followUpToken = traceStore.saveConsultation(consultationId, 'consultation', {
         consultationContext: result, patientContext: profile, history: [],
         durationMs,
         requestId: req.requestId,
@@ -350,7 +350,7 @@ function createApp(deps = {}) {
 
       res.json({
         success: true,
-        consultationId,
+        consultationId, followUpToken,
         durationMs,
         confidenceScore: Number.isFinite(finalState.confidence_score) ? finalState.confidence_score : null,
         result
@@ -444,7 +444,7 @@ function createApp(deps = {}) {
       const durationMs = Date.now() - startTime;
 
       const result = consultationResult(finalState, profile, consultationId, unresolvedIngredients, deps.legacyTestAdapter);
-      traceStore.saveTrace(consultationId, 'consult_with_image', {
+      const followUpToken = traceStore.saveConsultation(consultationId, 'consult_with_image', {
         consultationContext: result, patientContext: profile, history: [],
         durationMs,
         requestId: req.requestId,
@@ -462,7 +462,7 @@ function createApp(deps = {}) {
 
       res.json({
         success: true,
-        consultationId,
+        consultationId, followUpToken,
         durationMs,
         scan: sanitizedScan,
         confidenceScore: Number.isFinite(finalState.confidence_score) ? finalState.confidence_score : null,
@@ -479,7 +479,7 @@ function createApp(deps = {}) {
   clinicalPost('/api/follow-up', aiLimiter, smallJsonParser, smallUrlParser, async (req, res, next) => {
     try {
       const body = parseWithSchema(followUpRequestSchema, req.body);
-      const payload = traceStore.getTrace(body.consultationId)?.payload;
+      const payload = traceStore.authorizedConsultation(body.consultationId, req.get('Authorization'));
       const context = payload?.consultationContext;
       if (!context) return res.json({ success: true, data: sanitizeFollowUp({
         status: 'INSUFFICIENT_CONTEXT', reply: 'This consultation is unavailable. Start a new assessment.'

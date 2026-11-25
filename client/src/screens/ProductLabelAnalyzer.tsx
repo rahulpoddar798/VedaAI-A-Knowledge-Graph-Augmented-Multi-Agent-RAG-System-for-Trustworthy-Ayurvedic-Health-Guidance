@@ -1,3 +1,4 @@
+import { auditResponse } from '../../../shared/image_response.mjs';
 import { appendClinicalProfile } from '../data/consultation';
 import React, { useMemo, useRef, useState } from 'react';
 import {
@@ -49,6 +50,7 @@ export const ProductLabelAnalyzer: React.FC<ProductLabelAnalyzerProps> = ({
   backendOnline,
   onNavigate
 }) => {
+  const auditRequest = useRef(0);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const [selectedPresetId, setSelectedPresetId] = useState('');
@@ -112,6 +114,7 @@ export const ProductLabelAnalyzer: React.FC<ProductLabelAnalyzerProps> = ({
   const selectPreset = (presetId: string) => {
     const preset = SAMPLE_LABEL_AUDITS.find(p => p.id === presetId);
     if (!preset) return;
+    auditRequest.current++;
     setSelectedPresetId(preset.id);
     setUploadedFile(null);
     setImageUrl(preset.imageUrl);
@@ -147,6 +150,7 @@ export const ProductLabelAnalyzer: React.FC<ProductLabelAnalyzerProps> = ({
   const runLiveOrFallbackAudit = async (fileToScan?: File) => {
     const targetFile = fileToScan || uploadedFile;
     if (!targetFile) return;
+    const request = ++auditRequest.current;
 
     setLoading(true);
     setErrorMsg(null);
@@ -160,17 +164,21 @@ export const ProductLabelAnalyzer: React.FC<ProductLabelAnalyzerProps> = ({
         method: 'POST',
         body: formData
       });
-      const payload = await response.json().catch(() => ({}));
-      if (payload.status === 'ANALYSIS_UNAVAILABLE' || payload.extraction?.extraction_failed) {
+      const raw = await response.json().catch(() => ({}));
+      if (raw.status === 'ANALYSIS_UNAVAILABLE' || raw.extraction?.extraction_failed) {
         throw new Error('Analysis unavailable. The label could not be processed. Please retry later.');
       }
-      if (!response.ok || payload.success !== true) {
+      if (!response.ok || raw.success !== true) {
         throw new Error(
-          payload.error ||
+          raw.error ||
             `Backend label audit returned status ${response.status}. Verify Gemini API & Neo4j configuration.`
         );
       }
 
+      if (request !== auditRequest.current) return;
+      const parsed = auditResponse.safeParse(raw);
+      if (!parsed.success) throw new Error('Invalid label audit response.');
+      const payload = parsed.data;
       const normalizedVerified: AuditIngredient[] = (payload.auditedIngredients || []).map(
         (ing: any, idx: number) => ({
           ...ing,
@@ -217,6 +225,7 @@ export const ProductLabelAnalyzer: React.FC<ProductLabelAnalyzerProps> = ({
         summary: payload.summary
       });
     } catch (err) {
+      if (request !== auditRequest.current) return;
       const message =
         err instanceof Error
           ? err.message
@@ -224,7 +233,7 @@ export const ProductLabelAnalyzer: React.FC<ProductLabelAnalyzerProps> = ({
       setAuditResult(null);
       setErrorMsg(message);
     } finally {
-      setLoading(false);
+      if (request === auditRequest.current) setLoading(false);
     }
   };
 
@@ -236,6 +245,7 @@ export const ProductLabelAnalyzer: React.FC<ProductLabelAnalyzerProps> = ({
   };
 
   const clearToEmptyState = () => {
+    auditRequest.current++;
     setSelectedPresetId('');
     setUploadedFile(null);
     setImageUrl('');
@@ -268,7 +278,7 @@ export const ProductLabelAnalyzer: React.FC<ProductLabelAnalyzerProps> = ({
     if (v === 'FLAGGED') return 'Flagged';
     if (v === 'CAUTION') return 'Caution';
     if (v === 'INSUFFICIENT_EVIDENCE') return 'Insufficient evidence';
-    return v === 'SAFE' && auditResult?.isSampleData ? 'Demo ? no graph flag' : 'Insufficient evidence';
+    return v === 'SAFE' && auditResult?.isSampleData ? 'Demo / no graph flag' : 'Insufficient evidence';
   };
 
   const boxStyleMap: Record<

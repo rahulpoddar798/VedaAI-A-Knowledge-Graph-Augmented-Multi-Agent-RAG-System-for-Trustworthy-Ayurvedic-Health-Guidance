@@ -131,6 +131,7 @@ export interface HerbItem {
 
 export type EvidenceAssessment = ReturnType<typeof import('../../../shared/assessment.mjs').assessment.parse>;
 export interface ConsultationRecord {
+  followUpToken?: string;
   assessment?: EvidenceAssessment;
   id: string;
   timestamp: string;

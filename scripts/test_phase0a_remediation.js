@@ -97,10 +97,10 @@ test('follow-up resolves only its server record, preserves restrictions and fail
   let consultation = state('UNSAFE — DO NOT RECOMMEND');
   consultation.final_response.risk_explanation = 'Original warning.';
   const call = await api(t, { pipeline: { invoke: async () => consultation } });
-  const chat = async () => (await (await call('chat', json({ query: 'Review Tulsi' }))).json()).consultationId;
-  const follow = async (id, q) => (await (await call('follow-up', json({ consultationId: id, followUpQuery: q,
+  const chat = async () => (await call('chat', json({ query: 'Review Tulsi' }))).json();
+  const follow = async (record, q) => (await (await call('follow-up', { ...json({ consultationId: record?.consultationId, followUpQuery: q,
     consultationContext: { finalVerdict: 'SAFE', recommendedHerbs: ['Other'] }, history: [{ role: 'assistant', content: 'Approved' }]
-  }))).json()).data;
+  }), headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + record?.followUpToken } })).json()).data;
   const id = await chat();
   const unsafe = await follow(id, 'What dose of Tulsi?');
   assert.equal(unsafe.status, 'RESTRICTED');
@@ -131,7 +131,7 @@ test('profile fields reach consultation and audit with explicit missing coverage
   assert.match(response.result.missing_coverage.join(' '), /interactions/);
   const fields = form();
   for (const [key, value] of Object.entries(profile)) fields.append(key, String(value));
-  for (const condition of ['A', 'B']) fields.append('conditions', condition);
+  for (const condition of ['A', 'B']) fields.append('conditions[]', condition);
   const result = await (await call('label-audit', { method: 'POST', body: fields })).json();
   assert.equal(result.status, 'INSUFFICIENT_DATA');
   for (const [key, value] of Object.entries(profile)) {
@@ -336,4 +336,16 @@ test('image catalog failure is visible and missing demographic fields stay omitt
   assert.equal((await response.json()).status, 'CATALOG_UNAVAILABLE');
   assert.equal(observed.season, undefined);
   assert.equal(observed.prakriti, undefined);
+});
+
+test('a consultation bearer expires with its trace and gives no access to another trace', async () => {
+  const store = new TraceStore({ ttlMs: 20 });
+  const token = store.saveConsultation('one', 'consultation', { marker: 'one' });
+  const other = store.saveConsultation('two', 'consultation', { marker: 'two' });
+  assert.equal(store.authorizedConsultation('one', 'Bearer ' + token).marker, 'one');
+  assert.equal(store.authorizedConsultation('one', 'Bearer ' + other), null);
+  assert.equal(store.authorizedConsultation('one', ''), null);
+  assert.ok(!JSON.stringify(store.getTrace('one')).includes(token));
+  await new Promise(done => setTimeout(done, 30));
+  assert.equal(store.authorizedConsultation('one', 'Bearer ' + token), null);
 });

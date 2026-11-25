@@ -20,6 +20,7 @@ const responseSchema = z.object({
   success: z.literal(true),
   consultationId: z.uuid(),
   isOutOfDomain: z.boolean().optional(),
+  followUpToken: z.string().regex(/^[A-Za-z0-9_-]{43}$/).optional(),
   result: z.object({
     final_verdict: z.string(),
     summary_message: z.string(),
@@ -37,13 +38,13 @@ export function mapConsultation(payload: unknown, query: string, profile: Patien
   const { consultationId: id, result, isOutOfDomain } = parsed.data;
   const a = result.assessment;
   const category = a?.verdict.category;
-  if (a ? (a.verdict.consultationId !== id || category === 'permitted' ||
+  if (a ? (!parsed.data.followUpToken || a.verdict.consultationId !== id || category === 'permitted' ||
       result.final_verdict !== category?.toUpperCase() || isOutOfDomain) :
       (!isOutOfDomain || result.final_verdict !== 'OUT_OF_DOMAIN')) {
     throw new Error('Inconsistent consultation verdict.');
   }
   return {
-    assessment: a, id, timestamp: new Date(a?.verdict.createdAt ?? Date.now()).toLocaleString(),
+    assessment: a, id, followUpToken: parsed.data.followUpToken, timestamp: new Date(a?.verdict.createdAt ?? Date.now()).toLocaleString(),
     querySummary: query.trim().slice(0, 76), fullQuery: query.trim(),
     status: category && category !== 'permitted' ? category : 'out_of_domain', verdictLabel: result.final_verdict,
     herbsEvaluated: result.evaluated_herbs, prakritiSnapshot: profile.prakriti, seasonSnapshot: profile.season,

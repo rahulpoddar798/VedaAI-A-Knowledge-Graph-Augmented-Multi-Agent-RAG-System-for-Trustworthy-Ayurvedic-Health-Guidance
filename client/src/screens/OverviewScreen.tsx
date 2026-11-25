@@ -251,7 +251,7 @@ export const OverviewScreen: React.FC<OverviewScreenProps> = ({
             <div className="flex items-start gap-2 pt-2 text-[11px] text-[#758078]">
               <ShieldCheck className="w-4 h-4 text-[#173D32] shrink-0" />
               <span>
-                Safety rules enforce an independent Opponent verification step before any recommendation is surfaced.
+                Coverage and versioned rules determine the consultation verdict.
               </span>
             </div>
           </div>

@@ -11,8 +11,8 @@ export function DrugHerbCheckerScreen({ profile }: { profile: PatientProfile }) 
   const [selectedHerb, setSelectedHerb] = useState(herbOptions[0]);
   const [selectedMed, setSelectedMed] = useState(medications[0]);
   return <div className="space-y-6">
-      <PageHeader title="Drug?Herb Interaction Checker" eyebrow="Demonstration"
-        description="The available catalog and source tables contain no verified drug?herb interaction dataset." />
+      <PageHeader title="Drug-Herb Interaction Checker" eyebrow="Demonstration"
+        description="The available catalog and source tables contain no verified drug-herb interaction dataset." />
       {/* Explicit Herb + Medication Selection Panel */}
       <section className="bg-white border border-[#DDE4DE] rounded-xl p-5 space-y-5">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -394,7 +394,7 @@ export function GraphView({ graph }: { graph: CatalogGraph }) {
               <p className="font-mono text-xs bg-[#F7F5EE] border border-[#DDE4DE] rounded px-2.5 py-1.5 text-[#26332D]">
                 :{selectedEdge.type}
               </p>
-              <p>Project ontology ? {selectedEdge.verification}</p>
+              <p>Project ontology / {selectedEdge.verification}</p>
               <p className="text-[11px] text-[#758078] inline-flex items-center gap-1.5">
                 <Info className="w-3.5 h-3.5 text-[#164B45]" />
                 Provenance: {selectedEdge.provenance}

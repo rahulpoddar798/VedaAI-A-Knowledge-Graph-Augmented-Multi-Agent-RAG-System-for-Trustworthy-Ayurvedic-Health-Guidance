@@ -435,7 +435,7 @@ test('Public API removes infrastructure IDs, raw traces, Cypher, and model IDs w
     // 5. POST /api/follow-up & /api/feedback
     const followRes = await fetch(`${baseUrl}/api/follow-up`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + chatBody.followUpToken },
       body: JSON.stringify({ consultationId: chatBody.consultationId, followUpQuery: 'What should I drink instead?' })
     });
     assert.equal(followRes.status, 200);
@@ -548,7 +548,7 @@ test('Internal exceptions do not expose filesystem paths, URIs, or stack traces'
   const leakyErr = new Error('Fatal DB crash at C:\\Users\\rahul\\OneDrive\\Desktop\\veda_original\\engine\\agents.js neo4j+s://test-db.databases.neo4j.io');
   const traceStore = new TraceStore();
   const consultationId = require('node:crypto').randomUUID();
-  traceStore.saveTrace(consultationId, 'consultation', { consultationContext: { evaluated_herbs: ['Tulsi'] } });
+  const followUpToken = traceStore.saveConsultation(consultationId, 'consultation', { consultationContext: { evaluated_herbs: ['Tulsi'] } });
   const app = createApp({
     traceStore,
     pipeline: { invoke: async () => { throw leakyErr; } },
@@ -577,7 +577,7 @@ test('Internal exceptions do not expose filesystem paths, URIs, or stack traces'
 
     const followRes = await fetch(`${baseUrl}/api/follow-up`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + followUpToken },
       body: JSON.stringify({ consultationId, followUpQuery: 'Dosage?' })
     });
     assert.equal(followRes.status, 500);
@@ -692,7 +692,7 @@ test(
       assertNoSensitiveLeakage(chatBody, 'Live POST /api/chat');
 
       const followUp = await fetch(baseUrl + '/api/follow-up', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + chatBody.followUpToken },
         body: JSON.stringify({ consultationId: chatBody.consultationId, followUpQuery: 'What dose of Ginger?' })
       });
       assert.equal(followUp.status, 200);

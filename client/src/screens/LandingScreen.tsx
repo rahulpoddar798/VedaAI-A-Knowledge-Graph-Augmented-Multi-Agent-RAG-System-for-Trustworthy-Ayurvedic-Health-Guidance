@@ -41,7 +41,7 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({ onNavigate }) => {
               onClick={() => onNavigate('auth')}
               className="px-3.5 py-2 rounded-lg border border-[#DDE4DE] bg-white text-xs font-medium text-[#26332D] hover:bg-[#E8EFE8]/50 transition cursor-pointer"
             >
-              Clinician / Patient Sign In
+              Explore demo views
             </button>
             <button
               type="button"
@@ -132,7 +132,7 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({ onNavigate }) => {
           {
             Icon: GitBranch,
             title: 'Explicit Knowledge Graph Provenance',
-            desc: 'Every safety flag traces directly to Neo4j relationships across herbs, doshas, seasons (Ritucharya), and chronic conditions.'
+            desc: 'Catalog relationships show their available attribution and verification status.'
           },
           {
             Icon: ScanLine,
@@ -141,8 +141,8 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({ onNavigate }) => {
           },
           {
             Icon: Cpu,
-            title: 'Adversarial Multi-Agent Transparency',
-            desc: 'Distinguishes generated agent commentary from independently verified database facts and reports missing evidence clearly.'
+            title: 'Consultation execution',
+            desc: 'View the workflow stages, evidence selections, coverage gaps and deterministic verdict.'
           }
         ].map(item => {
           const Icon = item.Icon;
