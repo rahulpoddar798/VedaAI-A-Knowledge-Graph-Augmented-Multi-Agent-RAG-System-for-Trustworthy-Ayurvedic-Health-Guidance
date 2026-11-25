@@ -155,8 +155,10 @@ function publicResult(value) {
       ),
     ],
     safety_warnings: [
-      ...v.rules.map((r) => r.description),
-      ...a.findings.filter((f) => f.role === 'opponent').map((f) => f.text),
+      ...new Set([
+        ...v.rules.map((r) => r.description),
+        ...a.findings.filter((f) => f.role === 'opponent').map((f) => f.text),
+      ]),
     ],
     missing_coverage: v.missing,
     clinical_reasoning: [],

@@ -144,7 +144,7 @@ function buildVedaAIPipeline(deps = {}) {
         operations.map(async ([, fn]) =>
           z
             .array(source)
-            .max(96)
+            .max(256)
             .parse(await fn(s.retrieval_plan)),
         ),
       );
@@ -174,10 +174,10 @@ function buildVedaAIPipeline(deps = {}) {
         };
       });
       const records = ledger(s.consultationId, s.createdAt, ruleRows);
-      for (const hit of checks)
-        hit.evidenceIds.push(
-          records.find((e) => e.title === hit.ruleId && e.location === hit.version).id,
-        );
+      for (const hit of checks) {
+        const ruleRecord = records.find((e) => e.title === hit.ruleId && e.location === hit.version);
+        if (ruleRecord && !hit.evidenceIds.includes(ruleRecord.id)) hit.evidenceIds.push(ruleRecord.id);
+      }
       const entries = [...s.entries, ...records],
         unresolved = [...(s.unresolved || []), ...s.canonical_entities.ambiguous];
       return {

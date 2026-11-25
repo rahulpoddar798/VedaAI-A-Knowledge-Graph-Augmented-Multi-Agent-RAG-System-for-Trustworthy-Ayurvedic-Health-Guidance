@@ -47,4 +47,9 @@ test('assessment and transparency render only evidence belonging to the selected
     assert.ok(transparency.includes('Not available') && transparency.includes(herb));
     assert.ok(!transparency.includes('Total pipeline latency') && !transparency.includes('Ginger'));
   }
+
+  const { HealthProfileScreen } = await server.ssrLoadModule('/src/screens/HealthProfileScreen.tsx');
+  const blankProfile = { ...DEFAULT_PROFILE, ageGroup: '', biologicalSex: '', dietaryPreference: '', prakriti: '', season: '', conditions: [], allergies: [], medications: [] };
+  const profileMarkup = renderToStaticMarkup(createElement(HealthProfileScreen, { profile: blankProfile, onSaveProfile: () => {}, onNavigate: () => {} }));
+  assert.ok(profileMarkup.includes('<option value="" selected="">Not specified</option>') || profileMarkup.includes('Not specified'));
 });

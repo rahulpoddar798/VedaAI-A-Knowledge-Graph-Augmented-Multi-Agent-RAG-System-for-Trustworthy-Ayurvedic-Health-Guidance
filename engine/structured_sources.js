@@ -152,37 +152,82 @@ function reportedUses({ plants, query }) {
     })),
   ];
 }
+const SEASON_ALIASES = Object.freeze({
+  vasanta: 'Vasanta',
+  spring: 'Vasanta',
+  grishma: 'Grishma',
+  summer: 'Grishma',
+  varsha: 'Varsha',
+  monsoon: 'Varsha',
+  sharada: 'Sharada',
+  autumn: 'Sharada',
+  hemanta: 'Hemanta',
+  'pre-winter': 'Hemanta',
+  'early winter': 'Hemanta',
+  shishira: 'Shishira',
+  winter: 'Shishira',
+  'late winter': 'Shishira',
+});
+
+function resolveSeasonQuery(season) {
+  const clean = String(season || '').trim();
+  if (!clean) return '';
+  const lower = clean.toLowerCase();
+  if (SEASON_ALIASES[lower]) return SEASON_ALIASES[lower];
+  for (const token of lower.split(/[^a-z-]+/)) {
+    if (SEASON_ALIASES[token]) return SEASON_ALIASES[token];
+  }
+  return clean;
+}
+
 async function graph({ plants, season, prakriti, conditions }) {
   if (!plants.length) return [];
+  const normalizedSeason = resolveSeasonQuery(season);
+  const doshas = ['Vata', 'Pitta', 'Kapha'].filter((d) =>
+    (prakriti || '')
+      .toLowerCase()
+      .split(/[^a-z]+/)
+      .includes(d.toLowerCase()),
+  );
+  const conditionNames = [...new Set((conditions || []).map((c) => String(c || '').trim().toLowerCase()).filter(Boolean))];
   const session = getSharedDriver().session({ defaultAccessMode: 'READ' });
   try {
     const result = await session.executeRead(
       (tx) =>
         tx.run(
           'MATCH (h:Herb) WHERE h.botanical_name IN $plants OPTIONAL MATCH (h)-[:CONTRAINDICATED_IN]->(s:Season) WHERE toLower(s.name)=toLower($season) OR toLower(s.english)=toLower($season) RETURN DISTINCT h.name AS herb,h.botanical_name AS botanical,s.name AS season LIMIT 36',
-          { plants, season: season || '' },
+          { plants, season: normalizedSeason },
         ),
       { timeout: 5000 },
     );
     const context = await session.executeRead(
-      (tx) =>
-        tx.run(
+      async (tx) => {
+        const herbDosha = await tx.run(
           'MATCH (h:Herb)-[r:PACIFIES|AGGRAVATES]->(d:Dosha) WHERE h.botanical_name IN $plants AND (d.name IN $doshas OR EXISTS { MATCH (c:Condition)-[:ASSOCIATED_WITH]->(d) WHERE toLower(c.name) IN $conditions } OR EXISTS { MATCH (s:Season)-[:DOMINANT_IN]->(d) WHERE toLower(s.name)=toLower($season) OR toLower(s.english)=toLower($season) }) RETURN DISTINCT h.name AS herb,h.botanical_name AS botanical,type(r) AS predicate,d.name AS object ORDER BY botanical,predicate,object LIMIT 36',
           {
             plants,
-            season: season || '',
-            doshas: ['Vata', 'Pitta', 'Kapha'].filter((d) =>
-              (prakriti || '')
-                .toLowerCase()
-                .split(/[^a-z]+/)
-                .includes(d.toLowerCase()),
-            ),
-            conditions: (conditions || []).map((c) => c.toLowerCase()),
+            season: normalizedSeason,
+            doshas,
+            conditions: conditionNames,
           },
-        ),
+        );
+        const condLinks = conditionNames.length
+          ? await tx.run(
+              'MATCH (c:Condition)-[:ASSOCIATED_WITH]->(d:Dosha) WHERE toLower(c.name) IN $conditions RETURN DISTINCT c.name AS subject,d.name AS object ORDER BY subject,object LIMIT 24',
+              { conditions: conditionNames },
+            )
+          : { records: [] };
+        const seasonLinks = normalizedSeason
+          ? await tx.run(
+              'MATCH (s:Season)-[:DOMINANT_IN]->(d:Dosha) WHERE toLower(s.name)=toLower($season) OR toLower(s.english)=toLower($season) RETURN DISTINCT s.name AS subject,s.english AS english,d.name AS object ORDER BY subject,object LIMIT 12',
+              { season: normalizedSeason },
+            )
+          : { records: [] };
+        return { herbDosha, condLinks, seasonLinks };
+      },
       { timeout: 5000 },
     );
-    const legacy = context.records.map((record) => {
+    const legacy = context.herbDosha.records.map((record) => {
       const { herb, botanical, predicate, object } = record.toObject();
       return {
         kind: 'derived',
@@ -192,6 +237,30 @@ async function graph({ plants, season, prakriti, conditions }) {
         location: botanical,
         excerpt: [herb, predicate, object].join(' | '),
         fact: { subject: herb, predicate, object },
+      };
+    });
+    const conditionEdges = context.condLinks.records.map((record) => {
+      const { subject, object } = record.toObject();
+      return {
+        kind: 'derived',
+        method: 'graph',
+        title: 'VedaAI project ontology',
+        sourceId: null,
+        location: 'condition:' + subject,
+        excerpt: [subject, 'ASSOCIATED_WITH', object].join(' | '),
+        fact: { subject, predicate: 'ASSOCIATED_WITH', object },
+      };
+    });
+    const seasonEdges = context.seasonLinks.records.map((record) => {
+      const { subject, english, object } = record.toObject();
+      return {
+        kind: 'derived',
+        method: 'graph',
+        title: 'VedaAI project ontology',
+        sourceId: null,
+        location: 'season:' + subject,
+        excerpt: [english ? subject + ' (' + english + ')' : subject, 'DOMINANT_IN', object].join(' | '),
+        fact: { subject, predicate: 'DOMINANT_IN', object },
       };
     });
     return result.records
@@ -215,12 +284,12 @@ async function graph({ plants, season, prakriti, conditions }) {
               {
                 ...base,
                 excerpt: herb + ' | CONTRAINDICATED_IN | ' + match,
-                fact: { subject: herb, predicate: 'CONTRAINDICATED_IN', object: season },
+                fact: { subject: herb, predicate: 'CONTRAINDICATED_IN', object: match },
               },
             ]
           : [identity];
       })
-      .concat(legacy);
+      .concat(legacy, conditionEdges, seasonEdges);
   } finally {
     await session.close();
   }

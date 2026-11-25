@@ -1,6 +1,6 @@
 # VedaAI
 
-VedaAI is an experimental Ayurvedic decision-support application. The active consultation workflow retrieves attributable records, records gaps in safety coverage, and computes its verdict in application code. An IMPPAT reported-use association describes a database entry. Clinical efficacy and patient-specific safety require additional evidence.
+VedaAI is an experimental Ayurvedic decision-support application. The active consultation workflow retrieves attributable records, records gaps in safety coverage, and computes its verdict in application code. The production clinical rule registry currently ships empty (`registry = []`), document ingestion requires operator-supplied source texts, and live IMPPAT database writes remain pending. An IMPPAT reported-use association describes a database entry. Clinical efficacy and patient-specific safety require additional evidence.
 
 See [Evidence-first architecture and operating guide](EVIDENCE_ARCHITECTURE.md) for the workflow, API contract, schema migration, evaluation results and release limitations. Earlier phase reports, presentations, generated manuscripts and demo programs describe historical prototypes. Their clinical examples, confidence values and performance claims are illustrative or historical and have no standing as clinical validation of the current system.
 

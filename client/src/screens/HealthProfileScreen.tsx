@@ -139,6 +139,7 @@ export const HealthProfileScreen: React.FC<HealthProfileScreenProps> = ({
                   onChange={e => setDraft({ ...draft, ageGroup: e.target.value })}
                   className="w-full h-10 px-3 rounded-lg border border-[#DDE4DE] bg-[#F7F5EE]/50 text-sm text-[#26332D]"
                 >
+                  <option value="">Not specified</option>
                   <option>18–25 years</option>
                   <option>26–33 years</option>
                   <option>34–42 years</option>
@@ -155,6 +156,7 @@ export const HealthProfileScreen: React.FC<HealthProfileScreenProps> = ({
                   onChange={e => setDraft({ ...draft, biologicalSex: e.target.value })}
                   className="w-full h-10 px-3 rounded-lg border border-[#DDE4DE] bg-[#F7F5EE]/50 text-sm text-[#26332D]"
                 >
+                  <option value="">Not specified</option>
                   <option>Female</option>
                   <option>Male</option>
                   <option>Prefer not to say</option>
@@ -171,6 +173,7 @@ export const HealthProfileScreen: React.FC<HealthProfileScreenProps> = ({
                 onChange={e => setDraft({ ...draft, dietaryPreference: e.target.value })}
                 className="w-full h-10 px-3 rounded-lg border border-[#DDE4DE] bg-[#F7F5EE]/50 text-sm text-[#26332D]"
               >
+                <option value="">Not specified</option>
                 <option>Vegetarian</option>
                 <option>Vegan / Plant-only</option>
                 <option>Omnivorous</option>

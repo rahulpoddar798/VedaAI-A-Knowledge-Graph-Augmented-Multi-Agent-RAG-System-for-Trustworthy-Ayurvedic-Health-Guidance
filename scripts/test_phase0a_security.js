@@ -220,11 +220,22 @@ test('Image magic-byte signature detector distinguishes genuine vs spoofed buffe
   assert.equal(detectImageSignature(Buffer.from('MZfake-executable-bytes')), null);
 });
 
-test('Text scrubber preserves plain English words like "match" while scrubbing Cypher', () => {
+test('Text scrubber preserves plain English words like "match" while scrubbing Cypher and bare Aura IDs', () => {
   const clean = scrubInternalText('Result matches your Dosha and (Ginger)-[:CONTRAINDICATED_IN]->(Grishma).');
   assert.ok(clean.includes('Result matches your Dosha'));
   assert.ok(clean.includes('Ginger is contraindicated during Grishma'));
   assertNoSensitiveLeakage(clean, 'scrubInternalText');
+
+  const oldUri = process.env.NEO4J_URI;
+  process.env.NEO4J_URI = 'neo4j+s://ab12cd34.databases.neo4j.io';
+  try {
+    const scrubbedBareId = scrubInternalText('Failure on instance ab12cd34 inside handler.');
+    assert.equal(scrubbedBareId.includes('ab12cd34'), false);
+    assert.ok(scrubbedBareId.includes('[database]'));
+  } finally {
+    if (oldUri === undefined) delete process.env.NEO4J_URI;
+    else process.env.NEO4J_URI = oldUri;
+  }
 });
 
 test('Public API removes infrastructure IDs, raw traces, Cypher, and model IDs while storing traces server-side', async () => {
@@ -380,6 +391,45 @@ test('Public API removes infrastructure IDs, raw traces, Cypher, and model IDs w
     assert.equal(consultImgBody.trace, undefined);
     assert.ok(consultImgBody.scan.detected_herbs.includes('Indian Ginseng'));
     assertNoSensitiveLeakage(consultImgBody, 'POST /api/consult-with-image');
+
+    // 4b. Unverified herbal photo produces well-formed query and blocks positive clearance
+    const { buildVedaAIPipeline } = require('../engine/pipeline');
+    const traceApp = createApp({
+      pipeline: buildVedaAIPipeline({
+        graph: async () => [],
+        tables: async () => [],
+        documents: async () => [],
+        provider: { generateJSON: async () => ({ ids: [] }) }
+      }),
+      visionAgent: {
+        analyzeImage: async () => ({
+          product_name: 'Unlisted Extract',
+          is_ayurvedic_or_herbal: true,
+          detected_herbs: [],
+          ingredients_detected: ['Unlisted extract'],
+          formulation_type: 'Capsule',
+          visual_confidence: 0.85,
+          extracted_ocr_text: 'Unlisted extract',
+          summary: 'Herbal extract',
+          graph_membership: { status: 'INSUFFICIENT_DATA', verified_herbs: [], unverified_herbs: ['Unlisted extract'] }
+        })
+      },
+      driver: makeMockDriver(false),
+      checkDbHealth: async () => true
+    });
+    const unverifiedServer = await startTestServer(traceApp);
+    try {
+      const fdUnverified = new FormData();
+      fdUnverified.append('image', new Blob([realPng], { type: 'image/png' }), 'unlisted.png');
+      const unverifiedRes = await fetch(`${unverifiedServer.baseUrl}/api/consult-with-image`, { method: 'POST', body: fdUnverified });
+      assert.equal(unverifiedRes.status, 200);
+      const unverifiedBody = await unverifiedRes.json();
+      assert.equal(unverifiedBody.result.final_verdict, 'EXPERT_REVIEW_REQUIRED');
+      assert.ok(!JSON.stringify(unverifiedBody).includes('Can I take ?'));
+      assertNoSensitiveLeakage(unverifiedBody, 'POST /api/consult-with-image unverified');
+    } finally {
+      await new Promise(resolve => unverifiedServer.server.close(resolve));
+    }
 
     // 5. POST /api/follow-up & /api/feedback
     const followRes = await fetch(`${baseUrl}/api/follow-up`, {

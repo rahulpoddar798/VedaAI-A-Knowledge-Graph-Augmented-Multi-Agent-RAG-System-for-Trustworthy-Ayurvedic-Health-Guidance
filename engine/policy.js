@@ -1,51 +1,142 @@
 const { hash, coverage, verdict } = require('./evidence');
 const { version, ruleSchema, registry, guard, contextGuard } = require('./rule_registry');
-function applicableRules(profile, entries, rules = registry) {
+
+const SEASON_ALIASES = Object.freeze({
+  vasanta: 'vasanta',
+  spring: 'vasanta',
+  grishma: 'grishma',
+  summer: 'grishma',
+  varsha: 'varsha',
+  monsoon: 'varsha',
+  sharada: 'sharada',
+  autumn: 'sharada',
+  hemanta: 'hemanta',
+  'pre-winter': 'hemanta',
+  'early winter': 'hemanta',
+  shishira: 'shishira',
+  winter: 'shishira',
+  'late winter': 'shishira',
+});
+
+const DOSHAS = new Set(['vata', 'pitta', 'kapha']);
+
+function canonicalSeason(value) {
+  const clean = String(value || '')
+    .trim()
+    .toLowerCase();
+  if (!clean) return '';
+  if (SEASON_ALIASES[clean]) return SEASON_ALIASES[clean];
+  for (const token of clean.split(/[^a-z-]+/)) {
+    if (SEASON_ALIASES[token]) return SEASON_ALIASES[token];
+  }
+  return clean;
+}
+
+function sameSeason(a, b) {
+  const ca = canonicalSeason(a);
+  const cb = canonicalSeason(b);
+  return Boolean(ca && cb && ca === cb);
+}
+
+function doshaTokens(value) {
+  return String(value || '')
+    .toLowerCase()
+    .split(/[^a-z]+/)
+    .filter((token) => DOSHAS.has(token));
+}
+
+function applicableRules(profile = {}, entries = [], rules = registry) {
   const hits = [];
   const lower = (s) =>
     String(s || '')
       .trim()
       .toLowerCase();
+  const patientRecord = (field) => entries.find((e) => e.kind === 'patient' && e.location === field);
+  const patientSeason = patientRecord('current_season');
+  const patientPrakriti = patientRecord('prakriti');
+  const patientConditions = patientRecord('chronic_conditions');
+
   for (const candidate of rules) {
     const r = ruleSchema.parse(candidate);
     if (r.validation !== 'approved') continue;
     const identity = entries.find(
       (e) =>
-        e.method === 'graph' &&
-        e.fact?.predicate === 'catalog_identity' &&
-        lower(e.fact.subject) === lower(r.herb),
+        ((e.method === 'graph' && e.fact?.predicate === 'catalog_identity') ||
+          (e.kind === 'association' && e.verification === 'source_traceable')) &&
+        lower(e.fact?.subject) === lower(r.herb),
     );
-    const patient = entries.find((e) => e.kind === 'patient' && e.location === r.field);
+    const patient = patientRecord(r.field);
     if (!identity || !patient || !profile[r.field]?.some((v) => lower(v) === lower(r.value))) continue;
     hits.push({
       ruleId: r.id,
       version: r.version,
       description: r.description,
       outcome: r.outcome,
-      evidenceIds: [identity.id, patient.id],
+      evidenceIds: [...new Set([identity.id, patient.id])],
     });
   }
   for (const e of entries.filter(
     (e) =>
       e.method === 'graph' &&
       e.fact?.predicate === 'CONTRAINDICATED_IN' &&
-      lower(e.fact.object) === lower(profile.current_season),
+      sameSeason(e.fact.object, profile.current_season),
   )) {
     hits.push({
       ruleId: guard.id,
       version,
       description: guard.description,
       outcome: guard.outcome,
-      evidenceIds: [e.id],
+      evidenceIds: [...new Set([e.id, ...(patientSeason ? [patientSeason.id] : [])])],
     });
   }
+  const prakritiDoshas = doshaTokens(profile.prakriti);
+  const reportedConditions = Array.isArray(profile.chronic_conditions)
+    ? profile.chronic_conditions.map(lower).filter(Boolean)
+    : [];
   for (const e of entries.filter((e) => e.method === 'graph' && e.fact?.predicate === 'AGGRAVATES')) {
+    const dosha = lower(e.fact.object);
+    if (!dosha) continue;
+    const supportIds = [e.id];
+    let matched = false;
+
+    if (prakritiDoshas.includes(dosha)) {
+      matched = true;
+      if (patientPrakriti) supportIds.push(patientPrakriti.id);
+    }
+
+    const conditionEdges = entries.filter(
+      (c) =>
+        c.method === 'graph' &&
+        c.fact?.predicate === 'ASSOCIATED_WITH' &&
+        lower(c.fact.object) === dosha &&
+        reportedConditions.includes(lower(c.fact.subject)),
+    );
+    if (conditionEdges.length) {
+      matched = true;
+      for (const edge of conditionEdges) supportIds.push(edge.id);
+      if (patientConditions) supportIds.push(patientConditions.id);
+    }
+
+    const seasonEdges = entries.filter(
+      (s) =>
+        s.method === 'graph' &&
+        s.fact?.predicate === 'DOMINANT_IN' &&
+        lower(s.fact.object) === dosha &&
+        sameSeason(s.fact.subject, profile.current_season),
+    );
+    if (seasonEdges.length) {
+      matched = true;
+      for (const edge of seasonEdges) supportIds.push(edge.id);
+      if (patientSeason) supportIds.push(patientSeason.id);
+    }
+
+    if (!matched) continue;
     hits.push({
       ruleId: contextGuard.id,
       version,
       description: contextGuard.description,
       outcome: contextGuard.outcome,
-      evidenceIds: [e.id],
+      evidenceIds: [...new Set(supportIds)],
     });
   }
   return hits;

@@ -74,8 +74,35 @@ function missingCoverage(profile) {
   return missing;
 }
 
+function scrubPublicAssessmentResult(result) {
+  const scrub = (value) => (typeof value === 'string' ? scrubInternalText(value) : value);
+  return {
+    ...result,
+    summary_message: scrub(result.summary_message),
+    safety_warnings: Array.isArray(result.safety_warnings) ? result.safety_warnings.map(scrub) : [],
+    assessment: result.assessment
+      ? {
+          ...result.assessment,
+          verdict: {
+            ...result.assessment.verdict,
+            explanation: scrub(result.assessment.verdict.explanation),
+            rules: (result.assessment.verdict.rules || []).map((r) => ({ ...r, description: scrub(r.description) })),
+            coverage: (result.assessment.verdict.coverage || []).map((c) => ({ ...c, reason: scrub(c.reason), findings: (c.findings || []).map(scrub) })),
+          },
+          ledger: (result.assessment.ledger || []).map((e) => ({
+            ...e,
+            title: e.title ? scrub(e.title) : null,
+            location: e.location ? scrub(e.location) : null,
+            excerpt: scrub(e.excerpt),
+          })),
+          findings: (result.assessment.findings || []).map((f) => ({ ...f, text: scrub(f.text) })),
+        }
+      : result.assessment,
+  };
+}
+
 function consultationResult(state, profile, unresolved = [], legacyAdapter = false) {
-  if (state.assessment) return require('./engine/evidence').publicResult(state.assessment);
+  if (state.assessment) return scrubPublicAssessmentResult(require('./engine/evidence').publicResult(state.assessment));
   if (!legacyAdapter) throw new Error('Missing validated consultation assessment.');
   const result = sanitizeConsultationResult(state);
   const missing = missingCoverage(profile);
@@ -412,9 +439,14 @@ function createApp(deps = {}) {
       const unresolvedIngredients = sanitizedScan.catalog_verification.unverified_herbs.length
         ? sanitizedScan.catalog_verification.unverified_herbs : detectedNames.length ? [] : ['Ingredient identity unavailable'];
       const profile = patientProfile(body, 'Pitta-Vata', 'Grishma');
+      const labelNote = detectedNames.length
+        ? `Item identified from photo: ${detectedNames.join(', ')}`
+        : 'Uploaded herbal product could not be verified in the catalog';
       const effectiveQuery = body.query && body.query.trim()
-        ? `${body.query.trim()} (Item identified from photo: ${detectedNames.join(', ')})`
-        : `Can I take ${detectedNames.join(', ')}? Is it safe for my condition?`;
+        ? `${body.query.trim()} (${labelNote})`
+        : detectedNames.length
+          ? `Can I take ${detectedNames.join(', ')}? Is it safe for my condition?`
+          : 'Can I take this unidentified herbal product? Is it safe for my condition?';
 
       const finalState = await resolvePipeline().invoke({
         consultationId, requestId: req.requestId, unresolved: unresolvedIngredients,

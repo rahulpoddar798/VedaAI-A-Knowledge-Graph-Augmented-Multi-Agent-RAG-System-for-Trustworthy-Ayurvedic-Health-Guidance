@@ -97,7 +97,10 @@ export const ProductLabelAnalyzer: React.FC<ProductLabelAnalyzerProps> = ({
       if (statusFilter === 'flagged') return row.safety?.verdict === 'FLAGGED';
       if (statusFilter === 'caution') return row.safety?.verdict === 'CAUTION';
       if (statusFilter === 'verified')
-        return row.status === 'verified' && row.safety?.verdict === 'SAFE';
+        return (
+          row.status === 'verified' &&
+          (row.safety?.verdict === 'SAFE' || row.safety?.verdict === 'INSUFFICIENT_EVIDENCE')
+        );
       if (statusFilter === 'unverified_uncertain')
         return row.status === 'unverified' || row.status === 'uncertain';
       return true;

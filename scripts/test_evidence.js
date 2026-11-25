@@ -6,7 +6,7 @@ const fs = require('node:fs/promises'),
   os = require('node:os');
 const { buildVedaAIPipeline } = require('../engine/pipeline');
 const { ledger, assessment } = require('../engine/evidence');
-const { decide } = require('../engine/policy');
+const { applicableRules, conflicts, decide } = require('../engine/policy');
 const documents = require('../engine/documents');
 const { createApp } = require('../server');
 const identity = {
@@ -308,4 +308,148 @@ test('document ingestion, preservation, idempotence and ranked lookup', async (t
   assert.equal(hit.relevance, 1);
   assert.equal(hit.metadata.page, undefined);
   assert.equal(await fs.readFile(path.join(dir, hit.sourceId + '.txt'), 'utf8'), text);
+});
+
+test('policy regression suite enforces patient context matching and provenance on ontology edges', async (t) => {
+  const mkGraph = (subject, predicate, object, extra = {}) => ({
+    kind: 'derived',
+    method: 'graph',
+    title: predicate === 'CONTRAINDICATED_IN' ? 'VedaAI herb catalog' : 'VedaAI project ontology',
+    sourceId: predicate === 'CONTRAINDICATED_IN' ? 'vedaai-catalog' : null,
+    location: extra.location || 'Zingiber officinale',
+    excerpt: `${subject} | ${predicate} | ${object}`,
+    fact: { subject, predicate, object },
+  });
+  const runPolicy = (graphRows, profile) =>
+    buildVedaAIPipeline({
+      graph: async () => graphRows,
+      tables: async () => [],
+      documents: async () => [],
+      provider: { generateJSON: async () => ({ ids: [] }) },
+    }).invoke({ raw_query: 'Ginger guidance', user_profile: profile });
+
+  const aggPitta = mkGraph('Ginger', 'AGGRAVATES', 'Pitta');
+  const pacifyPitta = mkGraph('Ginger', 'PACIFIES', 'Pitta');
+  const pacifyVata = mkGraph('Ginger', 'PACIFIES', 'Vata');
+  const condPitta = mkGraph('Acid Reflux', 'ASSOCIATED_WITH', 'Pitta', { location: 'condition:Acid Reflux' });
+  const condKapha = mkGraph('Obesity', 'ASSOCIATED_WITH', 'Kapha', { location: 'condition:Obesity' });
+  const seasonGrishma = mkGraph('Grishma', 'DOMINANT_IN', 'Pitta', { location: 'season:Grishma' });
+  const seasonShishira = mkGraph('Shishira', 'DOMINANT_IN', 'Kapha', { location: 'season:Shishira' });
+  const contraGrishma = mkGraph('Ginger', 'CONTRAINDICATED_IN', 'Grishma');
+
+  await t.test('1. matching AGGRAVATES relationship and matching patient context', async () => {
+    const statePrakriti = await runPolicy([aggPitta], { prakriti: 'Pitta-Vata' });
+    const a1 = assessment.parse(statePrakriti.assessment);
+    assert.equal(a1.verdict.category, 'expert_review_required');
+    assert.equal(a1.verdict.rules.length, 1);
+    assert.equal(a1.verdict.rules[0].ruleId, 'legacy-context-review');
+    assert.equal(a1.verdict.rules[0].outcome, 'expert_review_required');
+    const prakritiRow = a1.ledger.find((e) => e.kind === 'patient' && e.location === 'prakriti');
+    const aggRow = a1.ledger.find((e) => e.fact?.predicate === 'AGGRAVATES');
+    assert.ok(a1.verdict.rules[0].evidenceIds.includes(aggRow.id));
+    assert.ok(a1.verdict.rules[0].evidenceIds.includes(prakritiRow.id));
+
+    const stateCondSeason = await runPolicy([aggPitta, condPitta, seasonGrishma], {
+      prakriti: 'Kapha',
+      chronic_conditions: ['Acid Reflux'],
+      current_season: 'Summer',
+    });
+    const a2 = assessment.parse(stateCondSeason.assessment);
+    assert.equal(a2.verdict.category, 'expert_review_required');
+    const reviewRule = a2.verdict.rules.find((r) => r.ruleId === 'legacy-context-review');
+    assert.ok(reviewRule);
+    assert.equal(reviewRule.outcome, 'expert_review_required');
+    for (const loc of ['chronic_conditions', 'current_season']) {
+      const p = a2.ledger.find((e) => e.kind === 'patient' && e.location === loc);
+      assert.ok(reviewRule.evidenceIds.includes(p.id), `Missing patient ID for ${loc}`);
+    }
+    assert.ok(reviewRule.evidenceIds.includes(a2.ledger.find((e) => e.fact?.predicate === 'ASSOCIATED_WITH').id));
+    assert.ok(reviewRule.evidenceIds.includes(a2.ledger.find((e) => e.fact?.predicate === 'DOMINANT_IN').id));
+  });
+
+  await t.test('2. AGGRAVATES relationship without matching patient context', async () => {
+    const state = await runPolicy([aggPitta, condKapha, seasonShishira], {
+      prakriti: 'Kapha',
+      chronic_conditions: ['Obesity'],
+      current_season: 'Winter',
+      medications: [],
+    });
+    const a = assessment.parse(state.assessment);
+    assert.equal(a.verdict.rules.some((r) => r.ruleId === 'legacy-context-review'), false);
+    assert.equal(a.verdict.category, 'insufficient_evidence');
+    assert.equal(applicableRules({ prakriti: 'Kapha', current_season: 'Shishira' }, a.ledger).length, 0);
+  });
+
+  await t.test('3. missing patient context never causes false clearance or false context match', async () => {
+    const state = await runPolicy([aggPitta, contraGrishma, seasonGrishma], {});
+    const a = assessment.parse(state.assessment);
+    assert.equal(a.verdict.rules.length, 0);
+    assert.equal(a.verdict.category, 'insufficient_evidence');
+    for (const dim of ['medications', 'allergies', 'chronic_conditions', 'current_season']) {
+      assert.ok(a.verdict.coverage.some((c) => c.dimension === dim && c.status === 'not_assessed'));
+    }
+  });
+
+  await t.test('4. conflicting PACIFIES and AGGRAVATES relationships stay visible and require review', async () => {
+    const stateSame = await runPolicy([pacifyPitta, aggPitta], { prakriti: 'Kapha', medications: [] });
+    const aSame = assessment.parse(stateSame.assessment);
+    assert.equal(aSame.verdict.category, 'expert_review_required');
+    const conflictFinding = aSame.findings.find((f) => f.category === 'conflict');
+    assert.ok(conflictFinding);
+    assert.equal(conflictFinding.evidenceIds.length, 2);
+    assert.ok(
+      aSame.verdict.coverage.some(
+        (c) => c.status === 'conflicting_evidence' && c.expertReview && c.evidenceIds.length === 2,
+      ),
+    );
+    const stateDiff = await runPolicy([pacifyVata, aggPitta], { prakriti: 'Kapha', medications: [] });
+    const aDiff = assessment.parse(stateDiff.assessment);
+    assert.equal(aDiff.findings.some((f) => f.category === 'conflict'), false);
+    assert.equal(aDiff.verdict.category, 'insufficient_evidence');
+    assert.equal(conflicts(aSame.ledger).length, 1);
+  });
+
+  await t.test('5. seasonal contraindication with matching season', async () => {
+    for (const seasonInput of ['Grishma', 'Summer']) {
+      const state = await runPolicy([contraGrishma], { current_season: seasonInput });
+      const a = assessment.parse(state.assessment);
+      assert.equal(a.verdict.category, 'expert_review_required');
+      const seasonRule = a.verdict.rules.find((r) => r.ruleId === 'legacy-season-edge');
+      assert.ok(seasonRule);
+      assert.equal(seasonRule.outcome, 'expert_review_required');
+      assert.ok(seasonRule.evidenceIds.includes(a.ledger.find((e) => e.fact?.predicate === 'CONTRAINDICATED_IN').id));
+      assert.ok(seasonRule.evidenceIds.includes(a.ledger.find((e) => e.kind === 'patient' && e.location === 'current_season').id));
+    }
+  });
+
+  await t.test('6. seasonal contraindication with a different season', async () => {
+    const state = await runPolicy([contraGrishma], { current_season: 'Shishira', medications: [] });
+    const a = assessment.parse(state.assessment);
+    assert.equal(a.verdict.rules.some((r) => r.ruleId === 'legacy-season-edge'), false);
+    assert.equal(a.verdict.category, 'insufficient_evidence');
+  });
+
+  await t.test('7. approved rule still blocks from source-traceable table evidence when graph is unavailable', async () => {
+    const assocFixture = {
+      kind: 'association',
+      method: 'table',
+      title: 'IMPPAT_TherapeuticUse_Plant_Association.tsv',
+      sourceId: 'fixture-sha',
+      location: 'line 1',
+      excerpt: 'Fixture | Root | nausea',
+      fact: { subject: 'Fixture', predicate: 'HAS_REPORTED_USE', object: 'nausea' },
+    };
+    const state = await buildVedaAIPipeline({
+      graph: fail,
+      tables: async () => [assocFixture],
+      documents: async () => [],
+      rules: [rule],
+      provider: { generateJSON: async () => ({ ids: [] }) },
+    }).invoke({ raw_query: 'Fixture herb', user_profile: reported });
+    const a = assessment.parse(state.assessment);
+    assert.equal(a.verdict.category, 'blocked');
+    assert.ok(a.stages.some((s) => s.name === 'graph' && s.status === 'unavailable'));
+    assert.equal(a.verdict.rules[0].ruleId, rule.id);
+    assert.ok(a.verdict.rules[0].evidenceIds.includes(a.ledger.find((e) => e.kind === 'association').id));
+  });
 });
