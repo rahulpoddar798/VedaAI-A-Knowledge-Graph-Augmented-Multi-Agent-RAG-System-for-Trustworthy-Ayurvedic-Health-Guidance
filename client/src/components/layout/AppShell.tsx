@@ -164,7 +164,7 @@ export const AppShell: React.FC<AppShellProps> = ({
             ) : (
               <WifiOff className="w-3.5 h-3.5 text-[#758078]" />
             )}
-            <span>{backendOnline ? 'Neo4j Aura Online' : 'Sample Prototype Mode'}</span>
+            <span>{backendOnline ? 'Neo4j Aura Online' : 'Catalog unavailable'}</span>
           </span>
           <span
             className={`w-2 h-2 rounded-full ${

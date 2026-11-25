@@ -154,21 +154,6 @@ export interface ConsultationRecord {
   }>;
 }
 
-export interface DrugHerbInteraction {
-  id: string;
-  herb: string;
-  herbBotanical: string;
-  medication: string;
-  medicationClass: string;
-  status: 'documented' | 'potential' | 'no_known_interaction' | 'insufficient_data';
-  severity: 'High' | 'Moderate' | 'Unknown' | 'Low';
-  mechanism: string;
-  clinicalGuidance: string;
-  graphPath?: string;
-  sources: string[];
-  missingEvidenceNote?: string;
-}
-
 export interface KGNode {
   id: string;
   label: string;

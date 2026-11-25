@@ -1,4 +1,6 @@
 require('dotenv').config();
+const { readCatalogGraph } = require('./engine/catalog_graph');
+const { catalogSchema } = require('./shared/catalog.mjs');
 const crypto = require('crypto');
 const express = require('express');
 const path = require('path');
@@ -289,6 +291,15 @@ function createApp(deps = {}) {
   /**
    * Public catalog of Ayurvedic herbs (metadata only; internal graph errors are sanitized).
    */
+  app.get('/api/graph', readLimiter, async (req, res) => {
+    try {
+      res.json(await readCatalogGraph(resolveDriver()));
+    } catch (err) {
+      logServerError('GET /api/graph', err, req.requestId, 503);
+      res.status(503).json({ success: false, error: 'Graph catalog unavailable.' });
+    }
+  });
+
   app.get('/api/herbs', readLimiter, async (req, res, next) => {
     let session = null;
     try {
@@ -302,7 +313,7 @@ function createApp(deps = {}) {
                h.sanskrit_name AS sanskrit_name,
                h.virya AS virya,
                h.rasa AS rasa,
-               h.therapeutic_uses AS therapeutic_uses,
+               h.therapeutic_uses AS therapeutic_uses, h.source AS source,
                collect(DISTINCT p.name) AS pacifies,
                collect(DISTINCT ag.name) AS aggravates
         ORDER BY h.name ASC LIMIT 500
@@ -311,12 +322,12 @@ function createApp(deps = {}) {
       const herbs = result.records.map(r => {
         const obj = r.toObject();
         return {
-          ...Object.fromEntries(['name', 'botanical_name', 'sanskrit_name', 'virya', 'rasa', 'therapeutic_uses']
+          ...Object.fromEntries(['name', 'botanical_name', 'sanskrit_name', 'virya', 'rasa', 'therapeutic_uses', 'source']
             .map(key => [key, scrubInternalText(obj[key])])),
           pacifies: (obj.pacifies || []).map(scrubInternalText), aggravates: (obj.aggravates || []).map(scrubInternalText)
         };
       });
-      res.json({ count: herbs.length, herbs });
+      res.json({ count: herbs.length, ...catalogSchema.parse({ herbs }) });
     } catch (err) {
       next(err);
     } finally {

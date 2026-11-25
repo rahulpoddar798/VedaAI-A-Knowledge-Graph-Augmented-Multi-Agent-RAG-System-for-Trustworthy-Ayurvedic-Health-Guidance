@@ -66,3 +66,51 @@ test('assessment and transparency render only evidence belonging to the selected
   const profileMarkup = renderToStaticMarkup(createElement(HealthProfileScreen, { profile: blankProfile, onSaveProfile: () => {}, onNavigate: () => {} }));
   assert.ok(profileMarkup.includes('<option value="" selected="">Not specified</option>') || profileMarkup.includes('Not specified'));
 });
+
+test('graph screen consumes the read-only graph API and distinguishes empty and unavailable responses', async t => {
+  const { createApp } = await import('../server.js');
+  let mode = 'ready';
+  let closed = 0;
+  const driver = { session(config) {
+    assert.equal(config.defaultAccessMode, 'READ');
+    return { close: async () => { closed++; }, executeRead: (fn, options) => {
+      assert.equal(options.timeout, 5000);
+      return fn({ run(query, params) {
+        assert.match(query, /LIMIT \$limit/);
+        assert.equal(params.limit.toNumber(), 24);
+        if (mode === 'error') throw new Error('private provider detail');
+        return { records: mode === 'empty' ? [] : [{ toObject: () => ({
+          endpoints: [{ key: 'internal1', label: 'Fixture herb', type: 'Herb', attribution: 'Fixture attribution' },
+            { key: 'internal2', label: 'Fixture dosha', type: 'Dosha' }],
+          predicate: 'PACIFIES', citation: 'Fixture source'
+        }) }] };
+      } });
+    } };
+  } };
+  const app = createApp({ driver });
+  const http = await new Promise(resolve => { const listener = app.listen(0, '127.0.0.1', () => resolve(listener)); });
+  t.after(() => new Promise(resolve => http.close(resolve)));
+  const server = await createServer({ root: fileURLToPath(new URL('.', import.meta.url)), server: { middlewareMode: true, hmr: false }, appType: 'custom' });
+  t.after(() => server.close());
+  const { fetchGraph, GraphView } = await server.ssrLoadModule('/src/screens/KnowledgeGraphScreen.tsx');
+  const fetchHttp = globalThis.fetch;
+  t.mock.method(globalThis, 'fetch', (url, options) => fetchHttp('http://127.0.0.1:' + http.address().port + url, options));
+  const graph = await fetchGraph();
+  const page = renderToStaticMarkup(createElement(GraphView, { graph }));
+  assert.match(page, /Fixture herb/);
+  assert.match(page, /Fixture source/);
+  assert.doesNotMatch(page, /internal1/);
+  mode = 'empty';
+  assert.deepEqual(await fetchGraph(), { nodes: [], edges: [] });
+  mode = 'error';
+  await assert.rejects(fetchGraph, /Graph catalog unavailable/);
+  assert.equal(closed, 3);
+  const { DrugHerbCheckerScreen } = await server.ssrLoadModule('/src/screens/DrugHerbCheckerScreen.tsx');
+  for (const medication of ['Warfarin', 'Unlisted medication']) {
+    const checker = renderToStaticMarkup(createElement(DrugHerbCheckerScreen, { profile: { medications: [medication] } }));
+    assert.match(checker, /Insufficient evidence/);
+    assert.match(checker, /Demonstration/);
+    assert.ok(checker.includes(medication));
+    assert.doesNotMatch(checker, /No known interaction|Documented interaction/);
+  }
+});

@@ -1,7 +1,15 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { ZoomIn, ZoomOut, RotateCcw, GitBranch, Info } from 'lucide-react';
 import { PageHeader } from '../components/ui/PageHeader';
-import { KG_EDGES, KG_NODES } from '../data/mockData';
+import { graphSchema } from '../../../shared/catalog.mjs';
+import { EmptyPanel, ErrorPanel, LoadingPanel } from '../components/ui/StatePanels';
+type CatalogGraph = ReturnType<typeof graphSchema.parse>;
+
+export async function fetchGraph(signal?: AbortSignal): Promise<CatalogGraph> {
+  const response = await fetch('/api/graph', { signal });
+  if (!response.ok) throw new Error('Graph catalog unavailable.');
+  return graphSchema.parse(await response.json());
+}
 import type { KGEdge, KGNode } from '../types/veda';
 
 const NODE_COLORS: Record<
@@ -16,8 +24,31 @@ const NODE_COLORS: Record<
 };
 
 export const KnowledgeGraphScreen: React.FC = () => {
-  const [selectedNodeId, setSelectedNodeId] = useState<string>('h-ginger');
-  const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>('e3');
+  const [graph, setGraph] = useState<CatalogGraph | null>(null);
+  const [failed, setFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchGraph(controller.signal).then(value => {
+      if (!controller.signal.aborted) setGraph(value);
+    }).catch(() => { if (!controller.signal.aborted) setFailed(true); });
+    return () => controller.abort();
+  }, [attempt]);
+  if (failed) return <ErrorPanel title="Graph unavailable" message="The catalog could not be loaded."
+    onRetry={() => { setFailed(false); setAttempt(a => a + 1); }} />;
+  if (!graph) return <LoadingPanel title="Loading graph" description="Reading the Neo4j catalog." />;
+  if (!graph.nodes.length) return <EmptyPanel title="Empty graph" description="No catalog relationships were returned." />;
+  return <GraphView graph={graph} />;
+};
+
+export function GraphView({ graph }: { graph: CatalogGraph }) {
+  const nodes: KGNode[] = useMemo(() => graph.nodes.map((n, i) => {
+    const angle = 2 * Math.PI * i / graph.nodes.length;
+    return { ...n, x: 480 + 375 * Math.cos(angle), y: 270 + 210 * Math.sin(angle) };
+  }), [graph.nodes]);
+  const edges = graph.edges;
+  const [selectedNodeId, setSelectedNodeId] = useState(nodes[0]?.id);
+  const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(edges[0]?.id ?? null);
   const [visibleTypes, setVisibleTypes] = useState<Record<KGNode['type'], boolean>>({
     Herb: true,
     Dosha: true,
@@ -28,8 +59,8 @@ export const KnowledgeGraphScreen: React.FC = () => {
   const [zoom, setZoom] = useState(1);
 
   const visibleNodes = useMemo(
-    () => KG_NODES.filter(n => visibleTypes[n.type]),
-    [visibleTypes]
+    () => nodes.filter(n => visibleTypes[n.type]),
+    [nodes, visibleTypes]
   );
 
   const visibleNodeSet = useMemo(
@@ -38,12 +69,12 @@ export const KnowledgeGraphScreen: React.FC = () => {
   );
 
   const visibleEdges = useMemo(
-    () => KG_EDGES.filter(e => visibleNodeSet.has(e.source) && visibleNodeSet.has(e.target)),
-    [visibleNodeSet]
+    () => edges.filter(e => visibleNodeSet.has(e.source) && visibleNodeSet.has(e.target)),
+    [edges, visibleNodeSet]
   );
 
-  const selectedNode = KG_NODES.find(n => n.id === selectedNodeId) || null;
-  const selectedEdge = KG_EDGES.find(e => e.id === selectedEdgeId) || null;
+  const selectedNode = nodes.find(n => n.id === selectedNodeId) || null;
+  const selectedEdge = edges.find(e => e.id === selectedEdgeId) || null;
 
   const connectedEdges = useMemo(
     () =>
@@ -72,14 +103,14 @@ export const KnowledgeGraphScreen: React.FC = () => {
       <PageHeader
         eyebrow="Neo4j Ontology Inspection"
         title="Knowledge Graph Explorer"
-        description="Explore relationships connecting Ayurvedic herbs, Doshas, seasonal Ritucharya cycles, clinical conditions, and drug interactions. Click any node or edge to inspect Cypher metadata and provenance."
+        description="Explore up to 24 relationships from the live Neo4j catalog. These project-authored ontology relationships are clinically unverified."
       />
 
       {/* Controls & Restrained Legend */}
       <div className="bg-white border border-[#DDE4DE] rounded-xl p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-xs font-semibold text-[#26332D] mr-1">Node Legend &amp; Filter:</span>
-          {(['Herb', 'Dosha', 'Season', 'Condition', 'Drug'] as const).map(type => {
+          {(['Herb', 'Dosha', 'Season', 'Condition'] as const).map(type => {
             const active = visibleTypes[type];
             return (
               <button
@@ -126,8 +157,8 @@ export const KnowledgeGraphScreen: React.FC = () => {
             type="button"
             onClick={() => {
               setZoom(1);
-              setSelectedNodeId('h-ginger');
-              setSelectedEdgeId('e3');
+              setSelectedNodeId(nodes[0]?.id);
+              setSelectedEdgeId(edges[0]?.id ?? null);
             }}
             className="inline-flex items-center gap-1 px-2.5 py-2 rounded-lg border border-[#DDE4DE] bg-white text-xs text-[#26332D] hover:bg-[#F7F5EE] cursor-pointer"
           >
@@ -184,8 +215,8 @@ export const KnowledgeGraphScreen: React.FC = () => {
 
               {/* Edges — only show label for selected/connected edge to avoid clutter */}
               {visibleEdges.map(edge => {
-                const src = KG_NODES.find(n => n.id === edge.source);
-                const tgt = KG_NODES.find(n => n.id === edge.target);
+                const src = nodes.find(n => n.id === edge.source);
+                const tgt = nodes.find(n => n.id === edge.target);
                 if (!src || !tgt) return null;
 
                 const isSelected = selectedEdgeId === edge.id;
@@ -339,8 +370,8 @@ export const KnowledgeGraphScreen: React.FC = () => {
                 </p>
                 <div className="space-y-1.5">
                   {connectedEdges.map(edge => {
-                    const src = KG_NODES.find(n => n.id === edge.source)?.label;
-                    const tgt = KG_NODES.find(n => n.id === edge.target)?.label;
+                    const src = nodes.find(n => n.id === edge.source)?.label;
+                    const tgt = nodes.find(n => n.id === edge.target)?.label;
                     return (
                       <button
                         key={edge.id}
@@ -370,9 +401,7 @@ export const KnowledgeGraphScreen: React.FC = () => {
               <p className="font-mono text-xs bg-[#F7F5EE] border border-[#DDE4DE] rounded px-2.5 py-1.5 text-[#26332D]">
                 :{selectedEdge.type}
               </p>
-              {selectedEdge.reason && (
-                <p className="text-xs text-[#26332D] leading-relaxed">{selectedEdge.reason}</p>
-              )}
+              <p>Project ontology ? {selectedEdge.verification}</p>
               <p className="text-[11px] text-[#758078] inline-flex items-center gap-1.5">
                 <Info className="w-3.5 h-3.5 text-[#164B45]" />
                 Provenance: {selectedEdge.provenance}

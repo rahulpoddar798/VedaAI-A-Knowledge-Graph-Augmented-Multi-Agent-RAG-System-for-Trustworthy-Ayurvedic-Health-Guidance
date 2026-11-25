@@ -1,17 +1,17 @@
 import React, { useMemo, useState } from 'react';
 import { Search, Leaf, GitBranch, Info, AlertTriangle, X } from 'lucide-react';
 import { PageHeader } from '../components/ui/PageHeader';
-import { SafetyBadge } from '../components/ui/SafetyBadge';
-import { EmptyPanel } from '../components/ui/StatePanels';
+import { EmptyPanel, ErrorPanel, LoadingPanel } from '../components/ui/StatePanels';
 import type { HerbItem, ScreenId } from '../types/veda';
 
 interface HerbExplorerScreenProps {
   herbs: HerbItem[];
+  status: 'loading' | 'ready' | 'error';
   onNavigate: (screen: ScreenId) => void;
 }
 
 export const HerbExplorerScreen: React.FC<HerbExplorerScreenProps> = ({
-  herbs,
+  herbs, status,
   onNavigate
 }) => {
   const [search, setSearch] = useState('');
@@ -36,12 +36,15 @@ export const HerbExplorerScreen: React.FC<HerbExplorerScreenProps> = ({
     });
   }, [herbs, search, viryaFilter, doshaFilter]);
 
+  if (status === 'loading') return <LoadingPanel title="Loading herbs" description="Reading the Neo4j catalog." />;
+  if (status === 'error') return <ErrorPanel title="Herb catalog unavailable" message="The catalog request failed. Refresh to retry." />;
+  if (!herbs.length) return <EmptyPanel title="Empty herb catalog" description="The catalog returned no herb records." />;
   return (
     <div className="space-y-6">
       <PageHeader
         eyebrow="Materia Medica Ontology"
         title="Herb Explorer"
-        description="Browse canonical Ayurvedic herbs from IMPPAT 2.0 and classical treatises. Search by Sanskrit name, botanical binomial, thermal potency (Virya), or dosha balance."
+        description="Browse herb records from the live Neo4j catalog. Search by Sanskrit name, botanical binomial, thermal potency (Virya), or dosha balance."
         actions={
           <button
             type="button"
@@ -183,7 +186,7 @@ export const HerbExplorerScreen: React.FC<HerbExplorerScreenProps> = ({
                     </div>
 
                     <div className="pt-2 border-t border-[#DDE4DE] flex items-center justify-between text-[11px] text-[#758078]">
-                      <span>{herb.evidence_tier || 'Classical + IMPPAT 2.0'}</span>
+                      <span>Catalog record</span>
                       <span className="font-medium text-[#173D32]">Inspect →</span>
                     </div>
                   </button>
@@ -200,7 +203,7 @@ export const HerbExplorerScreen: React.FC<HerbExplorerScreenProps> = ({
               <div className="flex items-start justify-between gap-2 pb-3 border-b border-[#DDE4DE]">
                 <div>
                   <span className="text-[11px] font-semibold uppercase tracking-wider text-[#164B45]">
-                    Monograph &amp; Graph Profile
+                    Catalog entry
                   </span>
                   <h3 className="font-editorial text-xl font-semibold text-[#26332D] mt-0.5">
                     {selectedHerb.name}
@@ -261,17 +264,10 @@ export const HerbExplorerScreen: React.FC<HerbExplorerScreenProps> = ({
               <div className="space-y-1.5 pt-2 border-t border-[#DDE4DE]">
                 <span className="text-xs font-semibold text-[#26332D]">Evidence Availability</span>
                 <div>
-                  <SafetyBadge
-                    status={
-                      selectedHerb.evidence_tier === 'Traditional Textual Only'
-                        ? 'insufficient_evidence'
-                        : 'verified'
-                    }
-                    labelOverride={selectedHerb.evidence_tier || 'IMPPAT 2.0 Cataloged'}
-                  />
+                  Unverified ontology record
                 </div>
                 <p className="text-[11px] text-[#758078]">
-                  Source: {selectedHerb.source || 'IMPPAT 2.0 Knowledge Base'}
+                  Source: {selectedHerb.source || 'Attribution unavailable'}
                 </p>
               </div>
 
@@ -301,7 +297,7 @@ export const HerbExplorerScreen: React.FC<HerbExplorerScreenProps> = ({
 
           <div className="pt-3 border-t border-[#DDE4DE] flex items-start gap-2 text-[11px] text-[#758078]">
             <Info className="w-3.5 h-3.5 text-[#164B45] shrink-0 mt-0.5" />
-            <span>Catalog properties reflect IMPPAT 2.0 and classical Dravyaguna references.</span>
+            <span>The catalog contains project-authored, clinically unverified relationships.</span>
           </div>
         </aside>
       </div>

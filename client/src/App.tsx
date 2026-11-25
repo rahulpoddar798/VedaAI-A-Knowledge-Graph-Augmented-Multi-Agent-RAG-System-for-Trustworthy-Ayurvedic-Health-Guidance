@@ -13,10 +13,8 @@ import { DrugHerbCheckerScreen } from './screens/DrugHerbCheckerScreen';
 import { KnowledgeGraphScreen } from './screens/KnowledgeGraphScreen';
 import { ConsultationHistoryScreen } from './screens/ConsultationHistoryScreen';
 import { AdminPortalScreen } from './screens/AdminPortalScreen';
-import {
-  DEFAULT_PROFILE,
-  HERBS_CATALOG
-} from './data/mockData';
+import { DEFAULT_PROFILE } from './data/mockData';
+import { catalogSchema } from '../../shared/catalog.mjs';
 import type {
   ConsultationRecord,
   HerbItem,
@@ -33,7 +31,8 @@ export default function App() {
   const [profile, setProfile] = useState<PatientProfile>(DEFAULT_PROFILE);
 
   const [backendOnline, setBackendOnline] = useState(false);
-  const [herbs, setHerbs] = useState<HerbItem[]>(HERBS_CATALOG);
+  const [herbs, setHerbs] = useState<HerbItem[]>([]);
+  const [catalogStatus, setCatalogStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [session, setSession] = useState(emptySession);
   const { records: consultations, active: activeConsultation } = session;
   const setActiveConsultation = (active: ConsultationRecord) => setSession(prev => ({ ...prev, active }));
@@ -55,27 +54,10 @@ export default function App() {
     fetch('/api/herbs')
       .then(r => (r.ok ? r.json() : Promise.reject(new Error('offline'))))
       .then(d => {
-        if (!cancelled && Array.isArray(d.herbs) && d.herbs.length > 0) {
-          // Merge live Neo4j herb list with curated safety/evidence metadata
-          const merged: HerbItem[] = d.herbs.map((live: any) => {
-            const match = HERBS_CATALOG.find(
-              c => c.name.toLowerCase() === String(live.name || '').toLowerCase()
-            );
-            return {
-              ...match,
-              ...live,
-              pacifies: (live.pacifies || []).filter(Boolean),
-              aggravates: (live.aggravates || []).filter(Boolean),
-              evidence_tier: match?.evidence_tier || 'Classical + IMPPAT 2.0',
-              safety_note: match?.safety_note
-            };
-          });
-          setHerbs(merged);
-        }
+        const result = catalogSchema.parse(d);
+        if (!cancelled) { setHerbs(result.herbs); setCatalogStatus('ready'); }
       })
-      .catch(() => {
-        // Keep HERBS_CATALOG fallback silently
-      });
+      .catch(() => { if (!cancelled) setCatalogStatus('error'); });
 
     return () => {
       cancelled = true;
@@ -170,7 +152,7 @@ export default function App() {
       )}
 
       {activeScreen === 'herbs' && (
-        <HerbExplorerScreen herbs={herbs} onNavigate={setActiveScreen} />
+        <HerbExplorerScreen status={catalogStatus} herbs={herbs} onNavigate={setActiveScreen} />
       )}
 
       {activeScreen === 'knowledge-graph' && <KnowledgeGraphScreen />}
