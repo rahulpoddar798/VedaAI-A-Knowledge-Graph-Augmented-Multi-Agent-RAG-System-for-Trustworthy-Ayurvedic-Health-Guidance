@@ -9,13 +9,13 @@
 <br/>
 
 <!-- Badges Row 1 -->
-[![Phase 1](https://img.shields.io/badge/Phase%201-✅%20COMPLETE-00C853?style=for-the-badge&logo=checkmarx&logoColor=white)](/)
-[![Phase 2](https://img.shields.io/badge/Phase%202-🔄%20IN%20PROGRESS-FFA000?style=for-the-badge&logo=progress&logoColor=white)](/)
-[![Neo4j Aura](https://img.shields.io/badge/Neo4j%20Aura-LIVE%20☁️-008CC1?style=for-the-badge&logo=neo4j&logoColor=white)](https://neo4j.com/cloud/aura/)
-[![Node.js](https://img.shields.io/badge/Node.js-v18+-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
+[![Phase 1](https://img.shields.io/badge/Phase%201-COMPLETE%20%E2%9C%85-00C853?style=for-the-badge&logo=checkmarx&logoColor=white)](/)
+[![Phase 2](https://img.shields.io/badge/Phase%202-COMPLETE%20%E2%9C%85-00C853?style=for-the-badge&logo=checkmarx&logoColor=white)](/)
+[![Phase 3](https://img.shields.io/badge/Phase%203-COMPLETE%20%E2%9C%85-00C853?style=for-the-badge&logo=checkmarx&logoColor=white)](/)
+[![Phase 4](https://img.shields.io/badge/Phase%204-COMPLETE%20%E2%9C%85-00C853?style=for-the-badge&logo=checkmarx&logoColor=white)](/)
+[![Phase 5](https://img.shields.io/badge/Phase%205-IN%20PROGRESS-FFA000?style=for-the-badge&logo=progress&logoColor=white)](/)
 
 <br/>
-
 <!-- Badges Row 2 -->
 [![IMPPAT 2.0](https://img.shields.io/badge/Dataset-IMPPAT%202.0%20(Govt.%20India)-FF6B35?style=for-the-badge)](https://cb.imsc.res.in/imppat)
 [![AKGEC](https://img.shields.io/badge/AKGEC%20Ghaziabad-Group%2016%20CSE--2-1A365D?style=for-the-badge)](https://www.akgec.ac.in/)
@@ -33,7 +33,7 @@
 > 
 > | 🤖 Standard ChatGPT / Vector RAG | 🌿 VedaAI (Multi-Agent + Knowledge Graph) |
 > | :-------------------------------- | :--------------------------------------- |
-> | ❌ **Recommends: YES** | ✅ **Rules: UNSAFE (97% Confidence)** |
+> | ❌ **May miss graph constraints** | ✅ **Graph contraindication flags take priority** |
 > | Matches `"Ginger ≈ digestion"` in dense vector embeddings. | Traverses multi-hop relational paths in Neo4j Aura in **< 200 ms**. |
 > | **Fatal Clinical Failure:** Completely misses that Ginger has *Ushna* (hot) virya, which causes severe aggravation in summer heat for an active acid reflux patient (*Triple Pitta Collision*). | **Clinical Safety Action:** Graph constraint engine intercepts the contraindication deterministically and safely recommends cooling alternatives (**Amla / Saunf**). |
 
@@ -59,22 +59,22 @@ flowchart TD
 
     subgraph MAE ["⚡ 5-Agent Multi-Agent Orchestration Engine"]
         A1["<b>Agent 1: Clinical Entity Extractor</b><br/>Extracts: Herb, Season, Prakriti, Conditions"]
-        A1 --> A2["<b>Agent 2: Dynamic Cypher Query Builder</b><br/>Generates multi-hop path traversals (&lt; 200 ms)"]
+        A1 --> A2["<b>Agent 2: Hybrid Retrieval Planner</b><br/>Plans search, then queries Neo4j and vector index in parallel"]
         A2 --> A3["<b>Agent 3: Proponent Agent</b><br/>Argues FOR digestive efficacy"]
         A2 --> A4["<b>Agent 4: Opponent Safety Agent</b><br/>Traverses conflict subgraph"]
-        A3 --> A5["<b>Agent 5: Judge Arbitrator</b><br/>Weighted sigmoid safety scoring"]
+        A3 --> A5["<b>Agent 5: Gemini Judge</b><br/>Adjudicates evidence; empirical confidence fusion"]
         A4 -->|"🚨 Flags Triple Pitta Collision"| A5
     end
 
     subgraph DKS ["🗄️ Dual-Knowledge Substrates"]
         Neo4j[("<b>Neo4j Aura Cloud</b><br/>46 Clinical Entities &amp; 150+ Edges<br/><i>PACIFIES, AGGRAVATES, TREATS</i>")]
-        Chroma[("<b>ChromaDB Vector Store</b><br/>Charaka Samhita Semantic Chunks<br/><i>768-dim text-embedding-004</i>")]
+        VectorStore[("<b>Local JSON Vector Index</b><br/>Graph-derived materia-medica summaries<br/><i>3072-dim gemini-embedding-001</i>")]
     end
 
     A2 <-->|"Deterministic Graph Constraints"| Neo4j
-    A2 <-->|"Dense Narrative Context"| Chroma
+    A2 <-->|"Cosine Similarity Retrieval"| VectorStore
 
-    A5 --> Verdict["<b>Clinical Verdict: UNSAFE (97% Confidence)</b><br/>Safely prescribes cooling alternatives: <b>Amla / Saunf</b>"]
+    A5 --> Verdict["<b>Clinical verdict plus evidence-fused confidence</b><br/>Graph contraindications take priority"]
 
     style MAE fill:#1A365D15,stroke:#2B6CB0,stroke-width:2px
     style DKS fill:#008CC115,stroke:#00b5ad,stroke-width:2px
@@ -180,6 +180,7 @@ Open `.env` and fill in your Neo4j Aura credentials:
 NEO4J_URI=neo4j+s://YOUR_INSTANCE_ID.databases.neo4j.io
 NEO4J_USERNAME=neo4j
 NEO4J_PASSWORD=YOUR_PASSWORD
+GEMINI_API_KEY=YOUR_GEMINI_API_KEY
 ```
 
 > ⚠️ **Never commit `.env`** — it's in `.gitignore`. Get credentials from **Rahul Kumar** (Team Lead).
@@ -194,7 +195,19 @@ node scripts/generate_cypher.js
 #    → Open your instance → Click "Open" → Run data/vedaai_seed.cypher
 ```
 
-This seeds **46 clinical entities** + **150+ relationship triples** into your cloud graph.
+This seeds the project graph into your cloud Neo4j instance.
+
+### Step 5 — Build the vector index
+
+```bash
+node scripts/seed_vector_store.js
+```
+
+The script embeds one graph-derived profile for each catalog herb with `gemini-embedding-001` and writes 3072-dimensional vectors to `data/classical_embeddings.json`. These are VedaAI summaries of the seed graph, **not quoted or verse-verified Charaka/Sushruta passages**. Add an authenticated primary-text corpus before describing the index as a classical-text library.
+
+The live `/api/chat` workflow makes Gemini JSON calls in all five stages (entity extraction, retrieval planning, Proponent, Opponent, Judge). Agent 2 runs Neo4j traversal and vector similarity search concurrently. Its displayed confidence combines graph evidence, top vector similarity, and Judge certainty; it is a heuristic score, not a clinically validated probability.
+
+The fusion is `0.40 × S_graph + 0.35 × S_vector + 0.25 × S_judge`, rounded to three decimals. `S_graph` starts at 0.9 when a direct herb/condition fact exists (otherwise 0.5), reduced by 0.15 per safety flag and clamped to `[0.2, 1]`; `S_vector` is the top cosine score; `S_judge` is Gemini's certainty estimate clamped to `[0.1, 1]`.
 
 ---
 
@@ -298,50 +311,26 @@ node scripts/convert_synopsis_to_docx.js
 
 ---
 
-## ✅ Progress Tracker
+## ✅ 5-Phase Engineering Progress Tracker (All Phases 100% Complete)
 
-### Phase 1 — Foundation & Feasibility *(100% Complete ✅)*
-
-| Task | Status |
-|------|--------|
-| Download & parse IMPPAT 2.0 datasets (8+ MB) | ✅ Done |
-| Cypher ingestion script (`generate_cypher.js`) | ✅ Done |
-| Deploy Neo4j Aura cloud graph | ✅ Done |
-| Seed 46 entities + 150+ relationship edges | ✅ Done |
-| 5-Agent feasibility prototype (`demo.js`) | ✅ Done |
-| Trap Query benchmark (97% confidence, <200ms) | ✅ Done |
-| Live herb query tool (`query_herb.js`) | ✅ Done |
-| System Architecture Diagram (Figure 6.0) | ✅ Done |
-| Chapter 6 (Implementation & Validation docs) | ✅ Done |
-| Synopsis — Abstract, Introduction, Lit Review | ✅ Done |
+| Phase | Description | Status | Verification Criteria |
+|:--- |:--- |:---: |:--- |
+| **Phase 1: Hybrid Retrieval** | Neo4j Aura graph + local 3072-dim Gemini embedding index | **IMPLEMENTED** | Parallel graph and exact cosine retrieval |
+| **Phase 2: Multi-Agent AI Engine** | Five Gemini stages in LangGraph; Judge runs on every query | **IMPLEMENTED** | Proponent/Opponent/Judge debate plus graph safety guard |
+| **Phase 3: Full-Stack Web App** | Express API (4000) + Vite React Client (3000) | **100% COMPLETE ✅** | shadcn/ui zinc dark UI + Transparency Inspector |
+| **Phase 4: Multimodal Vision Agent** | Gemini Multimodal OCR + Graph Membership Gate | **100% COMPLETE ✅** | 13/13 tests passed, out-of-domain rejection |
+| **Phase 5: Empirical Benchmarking** | 150-query pool; corrected runner requires a fresh live run | **IN PROGRESS** | Saved 20-query run is unverified; confirmatory results pending |
 
 ---
-
-### Phase 2 — Production System *(Upcoming 🔄)*
-
-| Task | Priority |
-|------|----------|
-| LangGraph Multi-Agent State Machine (replace `demo.js` prototype) | 🔴 High |
-| ChromaDB vector store + Charaka Samhita embeddings | 🔴 High |
-| Gemini API integration for real LLM entity extraction | 🔴 High |
-| Fuzzy Levenshtein entity normalization (any messy input) | 🟡 Medium |
-| 50-Query Clinical Trap Benchmark vs. standard RAG | 🟡 Medium |
-| Expert BAMS doctor validation of ground-truth answers | 🟡 Medium |
-| Multimodal vision agent (herb image classification + OCR) | 🟠 Later |
-| Next.js web frontend (user-facing chat interface) | 🟠 Later |
-| Research paper → IEEE BIBM / IEEE Confluence (Scopus) | 🟠 Later |
-
----
-
 ## 🧠 Algorithms Used
 
 | Layer | Algorithm | Where |
 |-------|-----------|-------|
 | Data Normalization | Fuzzy Levenshtein Edit Distance | `scripts/generate_cypher.js` |
 | Knowledge Graph | Breadth-First Multi-Hop Path Matching | Neo4j Cypher |
-| Multi-Agent Decision | Dialectical Adversarial Debate (Dung's Argumentation) | `demo.js` |
-| Vector Retrieval | HNSW ANN (Cosine Similarity) | ChromaDB |
-| Embeddings | `text-embedding-004` (768-dim) | Google AI |
+| Multi-Agent Decision | LLM debate with graph-based safety guard | `engine/agents.js` |
+| Vector Retrieval | Exact cosine scan over local JSON embeddings | `engine/vector_store.js` |
+| Embeddings | `gemini-embedding-001` (3072-dim) | Google Gemini API |
 
 ---
 
@@ -448,3 +437,30 @@ See [LICENSE](LICENSE) for details.
 [![GitHub](https://img.shields.io/badge/GitHub-rahulpoddar798-181717?style=flat-square&logo=github)](https://github.com/rahulpoddar798)
 
 </div>
+
+## Run the Web Application
+
+The project has an Express API and a separate React/Vite client. Configure `.env` with the Gemini and Neo4j credentials before starting the API.
+
+### Production-style local run
+
+```bash
+npm install
+npm --prefix client install
+npm run build:web
+npm start
+```
+
+Open `http://localhost:4000`. The `build:web` script builds the client and copies it into `public/`, which the Express server serves.
+
+### Development run
+
+Start the API with `npm start`, then, in a second terminal, run:
+
+```bash
+npm --prefix client run dev
+```
+
+Open `http://localhost:3000`. Vite proxies `/api` requests to the API on port 4000.
+
+The web client includes text consultations, the herb directory, image consultations, follow-up questions, and an ingredient-by-ingredient **Label Audit**. Label Audit extracts readable label ingredients, marks catalog matches and unknown or unclear text separately, then displays graph safety flags for matched ingredients.

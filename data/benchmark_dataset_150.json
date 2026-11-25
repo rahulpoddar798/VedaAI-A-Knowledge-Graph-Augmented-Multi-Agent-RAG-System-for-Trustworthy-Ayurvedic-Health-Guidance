@@ -1,0 +1,2450 @@
+[
+  {
+    "id": "BENCH-001",
+    "category": "complex_contraindicated",
+    "query": "Can I take Ginger for daily health during Grishma considering I suffer from Acid Reflux?",
+    "prakriti": "Pitta-Vata",
+    "season": "Grishma",
+    "conditions": [
+      "Acid Reflux"
+    ],
+    "has_contraindication": true,
+    "expected_verdict": "UNSAFE — DO NOT RECOMMEND",
+    "expected_flagged_herb": "Ginger",
+    "clinical_rationale": "Ginger possesses Ushna virya and aggravates Pitta (str 4). Severe multi-factor clash with Grishma season, Pitta prakriti, and Acid Reflux.",
+    "expected_safe_alternatives": [
+      "Coriander",
+      "Fennel",
+      "Indian Gooseberry"
+    ]
+  },
+  {
+    "id": "BENCH-002",
+    "category": "complex_contraindicated",
+    "query": "Can I take Ginger for daily health during Grishma considering I suffer from GERD?",
+    "prakriti": "Pitta",
+    "season": "Grishma",
+    "conditions": [
+      "GERD"
+    ],
+    "has_contraindication": true,
+    "expected_verdict": "UNSAFE — DO NOT RECOMMEND",
+    "expected_flagged_herb": "Ginger",
+    "clinical_rationale": "Direct seasonal contraindication in Grishma; Ushna virya exacerbates gastric mucosal acid.",
+    "expected_safe_alternatives": [
+      "Coriander",
+      "Fennel",
+      "Indian Gooseberry"
+    ]
+  },
+  {
+    "id": "BENCH-003",
+    "category": "complex_contraindicated",
+    "query": "Can I take Ginger for daily health during Sharada considering I suffer from Hypertension?",
+    "prakriti": "Pitta",
+    "season": "Sharada",
+    "conditions": [
+      "Hypertension"
+    ],
+    "has_contraindication": true,
+    "expected_verdict": "UNSAFE — DO NOT RECOMMEND",
+    "expected_flagged_herb": "Ginger",
+    "clinical_rationale": "Pitta aggravation during Sharad season elevates arterial pressure and metabolic heat.",
+    "expected_safe_alternatives": [
+      "Coriander",
+      "Fennel",
+      "Indian Gooseberry"
+    ]
+  },
+  {
+    "id": "BENCH-004",
+    "category": "complex_contraindicated",
+    "query": "Can I take Ginger for daily health during Grishma considering I suffer from Skin Disorders?",
+    "prakriti": "Pitta-Kapha",
+    "season": "Grishma",
+    "conditions": [
+      "Skin Disorders"
+    ],
+    "has_contraindication": true,
+    "expected_verdict": "UNSAFE — DO NOT RECOMMEND",
+    "expected_flagged_herb": "Ginger",
+    "clinical_rationale": "Hot potency worsens Pitta-driven inflammatory dermatological conditions in summer.",
+    "expected_safe_alternatives": [
+      "Coriander",
+      "Fennel",
+      "Indian Gooseberry"
+    ]
+  },
+  {
+    "id": "BENCH-005",
+    "category": "complex_contraindicated",
+    "query": "Can I take Long Pepper for daily health during Grishma considering I suffer from Acid Reflux?",
+    "prakriti": "Pitta",
+    "season": "Grishma",
+    "conditions": [
+      "Acid Reflux"
+    ],
+    "has_contraindication": true,
+    "expected_verdict": "UNSAFE — DO NOT RECOMMEND",
+    "expected_flagged_herb": "Long Pepper",
+    "clinical_rationale": "Direct seasonal contraindication for Long Pepper in Grishma; high Katu-Ushna potency.",
+    "expected_safe_alternatives": [
+      "Coriander",
+      "Fennel",
+      "Indian Gooseberry"
+    ]
+  },
+  {
+    "id": "BENCH-006",
+    "category": "complex_contraindicated",
+    "query": "Can I take Long Pepper for daily health during Grishma considering I suffer from GERD?",
+    "prakriti": "Pitta-Vata",
+    "season": "Grishma",
+    "conditions": [
+      "GERD"
+    ],
+    "has_contraindication": true,
+    "expected_verdict": "UNSAFE — DO NOT RECOMMEND",
+    "expected_flagged_herb": "Long Pepper",
+    "clinical_rationale": "Exacerbates burning sensations and mucosal irritation during peak summer heat.",
+    "expected_safe_alternatives": [
+      "Coriander",
+      "Fennel",
+      "Indian Gooseberry"
+    ]
+  },
+  {
+    "id": "BENCH-007",
+    "category": "complex_contraindicated",
+    "query": "Can I take Black Pepper for daily health during Grishma considering I suffer from Acid Reflux?",
+    "prakriti": "Pitta",
+    "season": "Grishma",
+    "conditions": [
+      "Acid Reflux"
+    ],
+    "has_contraindication": true,
+    "expected_verdict": "UNSAFE — DO NOT RECOMMEND",
+    "expected_flagged_herb": "Black Pepper",
+    "clinical_rationale": "Direct Grishma contraindication; intense heating virya triggers reflux flare-ups.",
+    "expected_safe_alternatives": [
+      "Coriander",
+      "Fennel",
+      "Indian Gooseberry"
+    ]
+  },
+  {
+    "id": "BENCH-008",
+    "category": "complex_contraindicated",
+    "query": "Can I take Black Pepper for daily health during Grishma considering I suffer from Hypertension?",
+    "prakriti": "Pitta-Kapha",
+    "season": "Grishma",
+    "conditions": [
+      "Hypertension"
+    ],
+    "has_contraindication": true,
+    "expected_verdict": "UNSAFE — DO NOT RECOMMEND",
+    "expected_flagged_herb": "Black Pepper",
+    "clinical_rationale": "High Ushna virya and Pitta vitiation elevates vascular tension in summer.",
+    "expected_safe_alternatives": [
+      "Coriander",
+      "Fennel",
+      "Indian Gooseberry"
+    ]
+  },
+  {
+    "id": "BENCH-009",
+    "category": "complex_contraindicated",
+    "query": "Can I take Holy Basil for daily health during Grishma considering I suffer from Acid Reflux?",
+    "prakriti": "Pitta",
+    "season": "Grishma",
+    "conditions": [
+      "Acid Reflux"
+    ],
+    "has_contraindication": true,
+    "expected_verdict": "UNSAFE — DO NOT RECOMMEND",
+    "expected_flagged_herb": "Holy Basil",
+    "clinical_rationale": "Tulsi possesses Ushna virya and aggravates Pitta (str 3); unsuitable for active acid reflux in summer.",
+    "expected_safe_alternatives": [
+      "Coriander",
+      "Fennel",
+      "Indian Gooseberry"
+    ]
+  },
+  {
+    "id": "BENCH-010",
+    "category": "complex_contraindicated",
+    "query": "Can I take Holy Basil for daily health during Sharada considering I suffer from GERD?",
+    "prakriti": "Pitta",
+    "season": "Sharada",
+    "conditions": [
+      "GERD"
+    ],
+    "has_contraindication": true,
+    "expected_verdict": "UNSAFE — DO NOT RECOMMEND",
+    "expected_flagged_herb": "Holy Basil",
+    "clinical_rationale": "Sharada is the natural season of Pitta accumulation; hot herbs cause severe burning.",
+    "expected_safe_alternatives": [
+      "Coriander",
+      "Fennel",
+      "Indian Gooseberry"
+    ]
+  },
+  {
+    "id": "BENCH-011",
+    "category": "complex_contraindicated",
+    "query": "Can I take Ashwagandha for daily health during Vasanta considering I suffer from Obesity?",
+    "prakriti": "Kapha",
+    "season": "Vasanta",
+    "conditions": [
+      "Obesity"
+    ],
+    "has_contraindication": true,
+    "expected_verdict": "UNSAFE — DO NOT RECOMMEND",
+    "expected_flagged_herb": "Ashwagandha",
+    "clinical_rationale": "Ashwagandha aggravates Kapha (str 3) and is heavy (Guru); directly contraindicated in obesity during Kapha-dominant spring.",
+    "expected_safe_alternatives": [
+      "Brahmi",
+      "Giloy"
+    ]
+  },
+  {
+    "id": "BENCH-012",
+    "category": "complex_contraindicated",
+    "query": "Can I take Ashwagandha for daily health during Vasanta considering I suffer from Respiratory Issues?",
+    "prakriti": "Kapha-Pitta",
+    "season": "Vasanta",
+    "conditions": [
+      "Respiratory Issues"
+    ],
+    "has_contraindication": true,
+    "expected_verdict": "UNSAFE — DO NOT RECOMMEND",
+    "expected_flagged_herb": "Ashwagandha",
+    "clinical_rationale": "Guru and Snigdha qualities increase bronchial mucus (Ama/Kapha) in spring season.",
+    "expected_safe_alternatives": [
+      "Brahmi",
+      "Giloy"
+    ]
+  },
+  {
+    "id": "BENCH-013",
+    "category": "complex_contraindicated",
+    "query": "Can I take Ashwagandha for daily health during Shishira considering I suffer from Obesity?",
+    "prakriti": "Kapha",
+    "season": "Shishira",
+    "conditions": [
+      "Obesity"
+    ],
+    "has_contraindication": true,
+    "expected_verdict": "UNSAFE — DO NOT RECOMMEND",
+    "expected_flagged_herb": "Ashwagandha",
+    "clinical_rationale": "Promotes anabolic weight gain; inappropriate for sluggish Kapha metabolism with obesity.",
+    "expected_safe_alternatives": [
+      "Brahmi",
+      "Giloy"
+    ]
+  },
+  {
+    "id": "BENCH-014",
+    "category": "complex_contraindicated",
+    "query": "Can I take Licorice for daily health during Vasanta considering I suffer from Respiratory Issues?",
+    "prakriti": "Kapha",
+    "season": "Vasanta",
+    "conditions": [
+      "Respiratory Issues"
+    ],
+    "has_contraindication": true,
+    "expected_verdict": "UNSAFE — DO NOT RECOMMEND",
+    "expected_flagged_herb": "Licorice",
+    "clinical_rationale": "Licorice has heavy, sweet qualities and aggravates Kapha (str 4); worsens chest congestion during spring.",
+    "expected_safe_alternatives": [
+      "Brahmi",
+      "Giloy"
+    ]
+  },
+  {
+    "id": "BENCH-015",
+    "category": "complex_contraindicated",
+    "query": "Can I take Licorice for daily health during Vasanta considering I suffer from Obesity?",
+    "prakriti": "Kapha-Vata",
+    "season": "Vasanta",
+    "conditions": [
+      "Obesity"
+    ],
+    "has_contraindication": true,
+    "expected_verdict": "UNSAFE — DO NOT RECOMMEND",
+    "expected_flagged_herb": "Licorice",
+    "clinical_rationale": "Severe Kapha aggravation leads to fluid retention and metabolic slowing.",
+    "expected_safe_alternatives": [
+      "Brahmi",
+      "Giloy"
+    ]
+  },
+  {
+    "id": "BENCH-016",
+    "category": "complex_contraindicated",
+    "query": "Can I take Aloe Vera for daily health during Varsha considering I suffer from Respiratory Issues?",
+    "prakriti": "Kapha",
+    "season": "Varsha",
+    "conditions": [
+      "Respiratory Issues"
+    ],
+    "has_contraindication": true,
+    "expected_verdict": "UNSAFE — DO NOT RECOMMEND",
+    "expected_flagged_herb": "Aloe Vera",
+    "clinical_rationale": "Direct contraindication in Varsha (monsoon); cold moist qualities worsen pulmonary congestion.",
+    "expected_safe_alternatives": [
+      "Amla",
+      "Giloy"
+    ]
+  },
+  {
+    "id": "BENCH-017",
+    "category": "complex_contraindicated",
+    "query": "Can I take Aloe Vera for daily health during Varsha considering I suffer from Obesity?",
+    "prakriti": "Kapha-Pitta",
+    "season": "Varsha",
+    "conditions": [
+      "Obesity"
+    ],
+    "has_contraindication": true,
+    "expected_verdict": "UNSAFE — DO NOT RECOMMEND",
+    "expected_flagged_herb": "Aloe Vera",
+    "clinical_rationale": "Monsoon humidity combined with cooling Kapha properties impairs digestive fire (Mandaagni).",
+    "expected_safe_alternatives": [
+      "Amla",
+      "Giloy"
+    ]
+  },
+  {
+    "id": "BENCH-018",
+    "category": "complex_contraindicated",
+    "query": "Can I take Turmeric for daily health during Varsha considering I suffer from Constipation?",
+    "prakriti": "Vata",
+    "season": "Varsha",
+    "conditions": [
+      "Constipation"
+    ],
+    "has_contraindication": true,
+    "expected_verdict": "UNSAFE — DO NOT RECOMMEND",
+    "expected_flagged_herb": "Turmeric",
+    "clinical_rationale": "Turmeric is dry (Ruksha) and aggravates Vata; causes intestinal dryness in Vata-dominant monsoon.",
+    "expected_safe_alternatives": [
+      "Amla",
+      "Giloy"
+    ]
+  },
+  {
+    "id": "BENCH-019",
+    "category": "complex_contraindicated",
+    "query": "Can I take Turmeric for daily health during Varsha considering I suffer from Insomnia?",
+    "prakriti": "Vata-Pitta",
+    "season": "Varsha",
+    "conditions": [
+      "Insomnia"
+    ],
+    "has_contraindication": true,
+    "expected_verdict": "UNSAFE — DO NOT RECOMMEND",
+    "expected_flagged_herb": "Turmeric",
+    "clinical_rationale": "Vata aggravation disrupts nervous tranquility during damp windy weather.",
+    "expected_safe_alternatives": [
+      "Amla",
+      "Giloy"
+    ]
+  },
+  {
+    "id": "BENCH-020",
+    "category": "complex_contraindicated",
+    "query": "Can I take Neem for daily health during Varsha considering I suffer from Arthritis?",
+    "prakriti": "Vata",
+    "season": "Varsha",
+    "conditions": [
+      "Arthritis"
+    ],
+    "has_contraindication": true,
+    "expected_verdict": "UNSAFE — DO NOT RECOMMEND",
+    "expected_flagged_herb": "Neem",
+    "clinical_rationale": "Neem is extremely cold, light and dry; severely vitiates Vata and worsens degenerative joint pain in monsoon.",
+    "expected_safe_alternatives": [
+      "Amla",
+      "Giloy"
+    ]
+  },
+  {
+    "id": "BENCH-021",
+    "category": "complex_contraindicated",
+    "query": "Can I take Neem for daily health during Varsha considering I suffer from Constipation?",
+    "prakriti": "Vata",
+    "season": "Varsha",
+    "conditions": [
+      "Constipation"
+    ],
+    "has_contraindication": true,
+    "expected_verdict": "UNSAFE — DO NOT RECOMMEND",
+    "expected_flagged_herb": "Neem",
+    "clinical_rationale": "Potent bitter (Tikta) rasa causes colon dryness and blocks peristalsis in Vata patients.",
+    "expected_safe_alternatives": [
+      "Amla",
+      "Giloy"
+    ]
+  },
+  {
+    "id": "BENCH-022",
+    "category": "complex_contraindicated",
+    "query": "Patient with Pitta-Vata prakriti experiencing Acid Reflux in Grishma season: is Ginger safe to use?",
+    "prakriti": "Pitta-Vata",
+    "season": "Grishma",
+    "conditions": [
+      "Acid Reflux"
+    ],
+    "has_contraindication": true,
+    "expected_verdict": "UNSAFE — DO NOT RECOMMEND",
+    "expected_flagged_herb": "Ginger",
+    "clinical_rationale": "Ginger possesses Ushna virya and aggravates Pitta (str 4). Severe multi-factor clash with Grishma season, Pitta prakriti, and Acid Reflux.",
+    "expected_safe_alternatives": [
+      "Coriander",
+      "Fennel",
+      "Indian Gooseberry"
+    ]
+  },
+  {
+    "id": "BENCH-023",
+    "category": "complex_contraindicated",
+    "query": "Patient with Pitta prakriti experiencing GERD in Grishma season: is Ginger safe to use?",
+    "prakriti": "Pitta",
+    "season": "Grishma",
+    "conditions": [
+      "GERD"
+    ],
+    "has_contraindication": true,
+    "expected_verdict": "UNSAFE — DO NOT RECOMMEND",
+    "expected_flagged_herb": "Ginger",
+    "clinical_rationale": "Direct seasonal contraindication in Grishma; Ushna virya exacerbates gastric mucosal acid.",
+    "expected_safe_alternatives": [
+      "Coriander",
+      "Fennel",
+      "Indian Gooseberry"
+    ]
+  },
+  {
+    "id": "BENCH-024",
+    "category": "complex_contraindicated",
+    "query": "Patient with Pitta prakriti experiencing Hypertension in Sharada season: is Ginger safe to use?",
+    "prakriti": "Pitta",
+    "season": "Sharada",
+    "conditions": [
+      "Hypertension"
+    ],
+    "has_contraindication": true,
+    "expected_verdict": "UNSAFE — DO NOT RECOMMEND",
+    "expected_flagged_herb": "Ginger",
+    "clinical_rationale": "Pitta aggravation during Sharad season elevates arterial pressure and metabolic heat.",
+    "expected_safe_alternatives": [
+      "Coriander",
+      "Fennel",
+      "Indian Gooseberry"
+    ]
+  },
+  {
+    "id": "BENCH-025",
+    "category": "complex_contraindicated",
+    "query": "Patient with Pitta-Kapha prakriti experiencing Skin Disorders in Grishma season: is Ginger safe to use?",
+    "prakriti": "Pitta-Kapha",
+    "season": "Grishma",
+    "conditions": [
+      "Skin Disorders"
+    ],
+    "has_contraindication": true,
+    "expected_verdict": "UNSAFE — DO NOT RECOMMEND",
+    "expected_flagged_herb": "Ginger",
+    "clinical_rationale": "Hot potency worsens Pitta-driven inflammatory dermatological conditions in summer.",
+    "expected_safe_alternatives": [
+      "Coriander",
+      "Fennel",
+      "Indian Gooseberry"
+    ]
+  },
+  {
+    "id": "BENCH-026",
+    "category": "complex_contraindicated",
+    "query": "Patient with Pitta prakriti experiencing Acid Reflux in Grishma season: is Long Pepper safe to use?",
+    "prakriti": "Pitta",
+    "season": "Grishma",
+    "conditions": [
+      "Acid Reflux"
+    ],
+    "has_contraindication": true,
+    "expected_verdict": "UNSAFE — DO NOT RECOMMEND",
+    "expected_flagged_herb": "Long Pepper",
+    "clinical_rationale": "Direct seasonal contraindication for Long Pepper in Grishma; high Katu-Ushna potency.",
+    "expected_safe_alternatives": [
+      "Coriander",
+      "Fennel",
+      "Indian Gooseberry"
+    ]
+  },
+  {
+    "id": "BENCH-027",
+    "category": "complex_contraindicated",
+    "query": "Patient with Pitta-Vata prakriti experiencing GERD in Grishma season: is Long Pepper safe to use?",
+    "prakriti": "Pitta-Vata",
+    "season": "Grishma",
+    "conditions": [
+      "GERD"
+    ],
+    "has_contraindication": true,
+    "expected_verdict": "UNSAFE — DO NOT RECOMMEND",
+    "expected_flagged_herb": "Long Pepper",
+    "clinical_rationale": "Exacerbates burning sensations and mucosal irritation during peak summer heat.",
+    "expected_safe_alternatives": [
+      "Coriander",
+      "Fennel",
+      "Indian Gooseberry"
+    ]
+  },
+  {
+    "id": "BENCH-028",
+    "category": "complex_contraindicated",
+    "query": "Patient with Pitta prakriti experiencing Acid Reflux in Grishma season: is Black Pepper safe to use?",
+    "prakriti": "Pitta",
+    "season": "Grishma",
+    "conditions": [
+      "Acid Reflux"
+    ],
+    "has_contraindication": true,
+    "expected_verdict": "UNSAFE — DO NOT RECOMMEND",
+    "expected_flagged_herb": "Black Pepper",
+    "clinical_rationale": "Direct Grishma contraindication; intense heating virya triggers reflux flare-ups.",
+    "expected_safe_alternatives": [
+      "Coriander",
+      "Fennel",
+      "Indian Gooseberry"
+    ]
+  },
+  {
+    "id": "BENCH-029",
+    "category": "complex_contraindicated",
+    "query": "Patient with Pitta-Kapha prakriti experiencing Hypertension in Grishma season: is Black Pepper safe to use?",
+    "prakriti": "Pitta-Kapha",
+    "season": "Grishma",
+    "conditions": [
+      "Hypertension"
+    ],
+    "has_contraindication": true,
+    "expected_verdict": "UNSAFE — DO NOT RECOMMEND",
+    "expected_flagged_herb": "Black Pepper",
+    "clinical_rationale": "High Ushna virya and Pitta vitiation elevates vascular tension in summer.",
+    "expected_safe_alternatives": [
+      "Coriander",
+      "Fennel",
+      "Indian Gooseberry"
+    ]
+  },
+  {
+    "id": "BENCH-030",
+    "category": "complex_contraindicated",
+    "query": "Patient with Pitta prakriti experiencing Acid Reflux in Grishma season: is Holy Basil safe to use?",
+    "prakriti": "Pitta",
+    "season": "Grishma",
+    "conditions": [
+      "Acid Reflux"
+    ],
+    "has_contraindication": true,
+    "expected_verdict": "UNSAFE — DO NOT RECOMMEND",
+    "expected_flagged_herb": "Holy Basil",
+    "clinical_rationale": "Tulsi possesses Ushna virya and aggravates Pitta (str 3); unsuitable for active acid reflux in summer.",
+    "expected_safe_alternatives": [
+      "Coriander",
+      "Fennel",
+      "Indian Gooseberry"
+    ]
+  },
+  {
+    "id": "BENCH-031",
+    "category": "complex_contraindicated",
+    "query": "Patient with Pitta prakriti experiencing GERD in Sharada season: is Holy Basil safe to use?",
+    "prakriti": "Pitta",
+    "season": "Sharada",
+    "conditions": [
+      "GERD"
+    ],
+    "has_contraindication": true,
+    "expected_verdict": "UNSAFE — DO NOT RECOMMEND",
+    "expected_flagged_herb": "Holy Basil",
+    "clinical_rationale": "Sharada is the natural season of Pitta accumulation; hot herbs cause severe burning.",
+    "expected_safe_alternatives": [
+      "Coriander",
+      "Fennel",
+      "Indian Gooseberry"
+    ]
+  },
+  {
+    "id": "BENCH-032",
+    "category": "complex_contraindicated",
+    "query": "Patient with Kapha prakriti experiencing Obesity in Vasanta season: is Ashwagandha safe to use?",
+    "prakriti": "Kapha",
+    "season": "Vasanta",
+    "conditions": [
+      "Obesity"
+    ],
+    "has_contraindication": true,
+    "expected_verdict": "UNSAFE — DO NOT RECOMMEND",
+    "expected_flagged_herb": "Ashwagandha",
+    "clinical_rationale": "Ashwagandha aggravates Kapha (str 3) and is heavy (Guru); directly contraindicated in obesity during Kapha-dominant spring.",
+    "expected_safe_alternatives": [
+      "Brahmi",
+      "Giloy"
+    ]
+  },
+  {
+    "id": "BENCH-033",
+    "category": "complex_contraindicated",
+    "query": "Patient with Kapha-Pitta prakriti experiencing Respiratory Issues in Vasanta season: is Ashwagandha safe to use?",
+    "prakriti": "Kapha-Pitta",
+    "season": "Vasanta",
+    "conditions": [
+      "Respiratory Issues"
+    ],
+    "has_contraindication": true,
+    "expected_verdict": "UNSAFE — DO NOT RECOMMEND",
+    "expected_flagged_herb": "Ashwagandha",
+    "clinical_rationale": "Guru and Snigdha qualities increase bronchial mucus (Ama/Kapha) in spring season.",
+    "expected_safe_alternatives": [
+      "Brahmi",
+      "Giloy"
+    ]
+  },
+  {
+    "id": "BENCH-034",
+    "category": "complex_contraindicated",
+    "query": "Patient with Kapha prakriti experiencing Obesity in Shishira season: is Ashwagandha safe to use?",
+    "prakriti": "Kapha",
+    "season": "Shishira",
+    "conditions": [
+      "Obesity"
+    ],
+    "has_contraindication": true,
+    "expected_verdict": "UNSAFE — DO NOT RECOMMEND",
+    "expected_flagged_herb": "Ashwagandha",
+    "clinical_rationale": "Promotes anabolic weight gain; inappropriate for sluggish Kapha metabolism with obesity.",
+    "expected_safe_alternatives": [
+      "Brahmi",
+      "Giloy"
+    ]
+  },
+  {
+    "id": "BENCH-035",
+    "category": "complex_contraindicated",
+    "query": "Patient with Kapha prakriti experiencing Respiratory Issues in Vasanta season: is Licorice safe to use?",
+    "prakriti": "Kapha",
+    "season": "Vasanta",
+    "conditions": [
+      "Respiratory Issues"
+    ],
+    "has_contraindication": true,
+    "expected_verdict": "UNSAFE — DO NOT RECOMMEND",
+    "expected_flagged_herb": "Licorice",
+    "clinical_rationale": "Licorice has heavy, sweet qualities and aggravates Kapha (str 4); worsens chest congestion during spring.",
+    "expected_safe_alternatives": [
+      "Brahmi",
+      "Giloy"
+    ]
+  },
+  {
+    "id": "BENCH-036",
+    "category": "complex_contraindicated",
+    "query": "Patient with Kapha-Vata prakriti experiencing Obesity in Vasanta season: is Licorice safe to use?",
+    "prakriti": "Kapha-Vata",
+    "season": "Vasanta",
+    "conditions": [
+      "Obesity"
+    ],
+    "has_contraindication": true,
+    "expected_verdict": "UNSAFE — DO NOT RECOMMEND",
+    "expected_flagged_herb": "Licorice",
+    "clinical_rationale": "Severe Kapha aggravation leads to fluid retention and metabolic slowing.",
+    "expected_safe_alternatives": [
+      "Brahmi",
+      "Giloy"
+    ]
+  },
+  {
+    "id": "BENCH-037",
+    "category": "complex_contraindicated",
+    "query": "Patient with Kapha prakriti experiencing Respiratory Issues in Varsha season: is Aloe Vera safe to use?",
+    "prakriti": "Kapha",
+    "season": "Varsha",
+    "conditions": [
+      "Respiratory Issues"
+    ],
+    "has_contraindication": true,
+    "expected_verdict": "UNSAFE — DO NOT RECOMMEND",
+    "expected_flagged_herb": "Aloe Vera",
+    "clinical_rationale": "Direct contraindication in Varsha (monsoon); cold moist qualities worsen pulmonary congestion.",
+    "expected_safe_alternatives": [
+      "Amla",
+      "Giloy"
+    ]
+  },
+  {
+    "id": "BENCH-038",
+    "category": "complex_contraindicated",
+    "query": "Patient with Kapha-Pitta prakriti experiencing Obesity in Varsha season: is Aloe Vera safe to use?",
+    "prakriti": "Kapha-Pitta",
+    "season": "Varsha",
+    "conditions": [
+      "Obesity"
+    ],
+    "has_contraindication": true,
+    "expected_verdict": "UNSAFE — DO NOT RECOMMEND",
+    "expected_flagged_herb": "Aloe Vera",
+    "clinical_rationale": "Monsoon humidity combined with cooling Kapha properties impairs digestive fire (Mandaagni).",
+    "expected_safe_alternatives": [
+      "Amla",
+      "Giloy"
+    ]
+  },
+  {
+    "id": "BENCH-039",
+    "category": "complex_contraindicated",
+    "query": "Patient with Vata prakriti experiencing Constipation in Varsha season: is Turmeric safe to use?",
+    "prakriti": "Vata",
+    "season": "Varsha",
+    "conditions": [
+      "Constipation"
+    ],
+    "has_contraindication": true,
+    "expected_verdict": "UNSAFE — DO NOT RECOMMEND",
+    "expected_flagged_herb": "Turmeric",
+    "clinical_rationale": "Turmeric is dry (Ruksha) and aggravates Vata; causes intestinal dryness in Vata-dominant monsoon.",
+    "expected_safe_alternatives": [
+      "Amla",
+      "Giloy"
+    ]
+  },
+  {
+    "id": "BENCH-040",
+    "category": "complex_contraindicated",
+    "query": "Patient with Vata-Pitta prakriti experiencing Insomnia in Varsha season: is Turmeric safe to use?",
+    "prakriti": "Vata-Pitta",
+    "season": "Varsha",
+    "conditions": [
+      "Insomnia"
+    ],
+    "has_contraindication": true,
+    "expected_verdict": "UNSAFE — DO NOT RECOMMEND",
+    "expected_flagged_herb": "Turmeric",
+    "clinical_rationale": "Vata aggravation disrupts nervous tranquility during damp windy weather.",
+    "expected_safe_alternatives": [
+      "Amla",
+      "Giloy"
+    ]
+  },
+  {
+    "id": "BENCH-041",
+    "category": "complex_contraindicated",
+    "query": "Patient with Vata prakriti experiencing Arthritis in Varsha season: is Neem safe to use?",
+    "prakriti": "Vata",
+    "season": "Varsha",
+    "conditions": [
+      "Arthritis"
+    ],
+    "has_contraindication": true,
+    "expected_verdict": "UNSAFE — DO NOT RECOMMEND",
+    "expected_flagged_herb": "Neem",
+    "clinical_rationale": "Neem is extremely cold, light and dry; severely vitiates Vata and worsens degenerative joint pain in monsoon.",
+    "expected_safe_alternatives": [
+      "Amla",
+      "Giloy"
+    ]
+  },
+  {
+    "id": "BENCH-042",
+    "category": "complex_contraindicated",
+    "query": "Patient with Vata prakriti experiencing Constipation in Varsha season: is Neem safe to use?",
+    "prakriti": "Vata",
+    "season": "Varsha",
+    "conditions": [
+      "Constipation"
+    ],
+    "has_contraindication": true,
+    "expected_verdict": "UNSAFE — DO NOT RECOMMEND",
+    "expected_flagged_herb": "Neem",
+    "clinical_rationale": "Potent bitter (Tikta) rasa causes colon dryness and blocks peristalsis in Vata patients.",
+    "expected_safe_alternatives": [
+      "Amla",
+      "Giloy"
+    ]
+  },
+  {
+    "id": "BENCH-043",
+    "category": "complex_contraindicated",
+    "query": "Patient with Pitta-Vata prakriti experiencing Acid Reflux in Grishma season: is Ginger safe to use?",
+    "prakriti": "Pitta-Vata",
+    "season": "Grishma",
+    "conditions": [
+      "Acid Reflux"
+    ],
+    "has_contraindication": true,
+    "expected_verdict": "UNSAFE — DO NOT RECOMMEND",
+    "expected_flagged_herb": "Ginger",
+    "clinical_rationale": "Ginger possesses Ushna virya and aggravates Pitta (str 4). Severe multi-factor clash with Grishma season, Pitta prakriti, and Acid Reflux.",
+    "expected_safe_alternatives": [
+      "Coriander",
+      "Fennel",
+      "Indian Gooseberry"
+    ]
+  },
+  {
+    "id": "BENCH-044",
+    "category": "complex_contraindicated",
+    "query": "Patient with Pitta prakriti experiencing GERD in Grishma season: is Ginger safe to use?",
+    "prakriti": "Pitta",
+    "season": "Grishma",
+    "conditions": [
+      "GERD"
+    ],
+    "has_contraindication": true,
+    "expected_verdict": "UNSAFE — DO NOT RECOMMEND",
+    "expected_flagged_herb": "Ginger",
+    "clinical_rationale": "Direct seasonal contraindication in Grishma; Ushna virya exacerbates gastric mucosal acid.",
+    "expected_safe_alternatives": [
+      "Coriander",
+      "Fennel",
+      "Indian Gooseberry"
+    ]
+  },
+  {
+    "id": "BENCH-045",
+    "category": "complex_contraindicated",
+    "query": "Patient with Pitta prakriti experiencing Hypertension in Sharada season: is Ginger safe to use?",
+    "prakriti": "Pitta",
+    "season": "Sharada",
+    "conditions": [
+      "Hypertension"
+    ],
+    "has_contraindication": true,
+    "expected_verdict": "UNSAFE — DO NOT RECOMMEND",
+    "expected_flagged_herb": "Ginger",
+    "clinical_rationale": "Pitta aggravation during Sharad season elevates arterial pressure and metabolic heat.",
+    "expected_safe_alternatives": [
+      "Coriander",
+      "Fennel",
+      "Indian Gooseberry"
+    ]
+  },
+  {
+    "id": "BENCH-046",
+    "category": "complex_contraindicated",
+    "query": "Patient with Pitta-Kapha prakriti experiencing Skin Disorders in Grishma season: is Ginger safe to use?",
+    "prakriti": "Pitta-Kapha",
+    "season": "Grishma",
+    "conditions": [
+      "Skin Disorders"
+    ],
+    "has_contraindication": true,
+    "expected_verdict": "UNSAFE — DO NOT RECOMMEND",
+    "expected_flagged_herb": "Ginger",
+    "clinical_rationale": "Hot potency worsens Pitta-driven inflammatory dermatological conditions in summer.",
+    "expected_safe_alternatives": [
+      "Coriander",
+      "Fennel",
+      "Indian Gooseberry"
+    ]
+  },
+  {
+    "id": "BENCH-047",
+    "category": "complex_contraindicated",
+    "query": "Patient with Pitta prakriti experiencing Acid Reflux in Grishma season: is Long Pepper safe to use?",
+    "prakriti": "Pitta",
+    "season": "Grishma",
+    "conditions": [
+      "Acid Reflux"
+    ],
+    "has_contraindication": true,
+    "expected_verdict": "UNSAFE — DO NOT RECOMMEND",
+    "expected_flagged_herb": "Long Pepper",
+    "clinical_rationale": "Direct seasonal contraindication for Long Pepper in Grishma; high Katu-Ushna potency.",
+    "expected_safe_alternatives": [
+      "Coriander",
+      "Fennel",
+      "Indian Gooseberry"
+    ]
+  },
+  {
+    "id": "BENCH-048",
+    "category": "complex_contraindicated",
+    "query": "Patient with Pitta-Vata prakriti experiencing GERD in Grishma season: is Long Pepper safe to use?",
+    "prakriti": "Pitta-Vata",
+    "season": "Grishma",
+    "conditions": [
+      "GERD"
+    ],
+    "has_contraindication": true,
+    "expected_verdict": "UNSAFE — DO NOT RECOMMEND",
+    "expected_flagged_herb": "Long Pepper",
+    "clinical_rationale": "Exacerbates burning sensations and mucosal irritation during peak summer heat.",
+    "expected_safe_alternatives": [
+      "Coriander",
+      "Fennel",
+      "Indian Gooseberry"
+    ]
+  },
+  {
+    "id": "BENCH-049",
+    "category": "complex_contraindicated",
+    "query": "Patient with Pitta prakriti experiencing Acid Reflux in Grishma season: is Black Pepper safe to use?",
+    "prakriti": "Pitta",
+    "season": "Grishma",
+    "conditions": [
+      "Acid Reflux"
+    ],
+    "has_contraindication": true,
+    "expected_verdict": "UNSAFE — DO NOT RECOMMEND",
+    "expected_flagged_herb": "Black Pepper",
+    "clinical_rationale": "Direct Grishma contraindication; intense heating virya triggers reflux flare-ups.",
+    "expected_safe_alternatives": [
+      "Coriander",
+      "Fennel",
+      "Indian Gooseberry"
+    ]
+  },
+  {
+    "id": "BENCH-050",
+    "category": "complex_contraindicated",
+    "query": "Patient with Pitta-Kapha prakriti experiencing Hypertension in Grishma season: is Black Pepper safe to use?",
+    "prakriti": "Pitta-Kapha",
+    "season": "Grishma",
+    "conditions": [
+      "Hypertension"
+    ],
+    "has_contraindication": true,
+    "expected_verdict": "UNSAFE — DO NOT RECOMMEND",
+    "expected_flagged_herb": "Black Pepper",
+    "clinical_rationale": "High Ushna virya and Pitta vitiation elevates vascular tension in summer.",
+    "expected_safe_alternatives": [
+      "Coriander",
+      "Fennel",
+      "Indian Gooseberry"
+    ]
+  },
+  {
+    "id": "BENCH-051",
+    "category": "simple_safe",
+    "query": "Can I consume Amla daily to improve immunity and digestion?",
+    "prakriti": "Pitta",
+    "season": "Grishma",
+    "conditions": [
+      "Acid Reflux"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Amla is Sheeta virya and Tridosha-pacifying; specifically indicated for Pitta and acidity.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-052",
+    "category": "simple_safe",
+    "query": "Can I chew Fennel seeds after meals to reduce bloating and stomach heat?",
+    "prakriti": "Pitta-Vata",
+    "season": "Grishma",
+    "conditions": [
+      "Acid Reflux"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Fennel is cooling and deeply soothing for Pitta and gastrointestinal spasms.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-053",
+    "category": "simple_safe",
+    "query": "Is Coriander seed water helpful for internal burning and excessive thirst?",
+    "prakriti": "Pitta",
+    "season": "Grishma",
+    "conditions": [
+      "Inflammation"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Dhanyaka is Sheeta and specifically drains excess Pitta heat safely.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-054",
+    "category": "simple_safe",
+    "query": "Can I take Giloy juice for general rejuvenation and fever resistance?",
+    "prakriti": "Tridoshic",
+    "season": "Vasanta",
+    "conditions": [
+      "Diabetes"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Giloy is a divine rasayana with tridoshic balancing actions and metabolic support.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-055",
+    "category": "simple_safe",
+    "query": "Can I take Brahmi for calming mental anxiety and improving sleep quality?",
+    "prakriti": "Vata-Pitta",
+    "season": "Sharada",
+    "conditions": [
+      "Anxiety"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Medhya rasayana with Sheeta virya; calms Vata without provoking Pitta.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-056",
+    "category": "simple_safe",
+    "query": "Can I take Ashwagandha with warm milk in winter for stamina?",
+    "prakriti": "Vata",
+    "season": "Hemanta",
+    "conditions": [
+      "Insomnia"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Vata-pacifying rasayana; ideal during cold Hemanta season for nervous exhaustion.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-057",
+    "category": "simple_safe",
+    "query": "Can I drink fresh Ginger tea during cold winter mornings for sluggish digestion?",
+    "prakriti": "Kapha-Vata",
+    "season": "Shishira",
+    "conditions": [
+      "Constipation"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Ushna virya stimulates low Agni in cold winter without Pitta danger.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-058",
+    "category": "simple_safe",
+    "query": "Can I take Shatavari powder for soothing gastritis and building vitality?",
+    "prakriti": "Pitta",
+    "season": "Grishma",
+    "conditions": [
+      "Acid Reflux"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Sweet, cooling and unctuous; nourishes gastric tissues and pacifies hot Pitta.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-059",
+    "category": "simple_safe",
+    "query": "Can I drink warm Tulsi tea for seasonal cough and cold in winter?",
+    "prakriti": "Kapha",
+    "season": "Hemanta",
+    "conditions": [
+      "Respiratory Issues"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Ushna potency clears accumulated Kapha mucus effectively in cold weather.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-060",
+    "category": "simple_safe",
+    "query": "Can I use Licorice root tea for dry cough and stomach burn in autumn?",
+    "prakriti": "Pitta",
+    "season": "Sharada",
+    "conditions": [
+      "Acid Reflux"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Demulcent and cooling Sheeta virya protects the esophagus from acid.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-061",
+    "category": "simple_safe",
+    "query": "Regarding Indian Gooseberry: is it beneficial for Acid Reflux during Grishma?",
+    "prakriti": "Pitta",
+    "season": "Grishma",
+    "conditions": [
+      "Acid Reflux"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Amla is Sheeta virya and Tridosha-pacifying; specifically indicated for Pitta and acidity.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-062",
+    "category": "simple_safe",
+    "query": "Regarding Fennel: is it beneficial for Acid Reflux during Grishma?",
+    "prakriti": "Pitta-Vata",
+    "season": "Grishma",
+    "conditions": [
+      "Acid Reflux"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Fennel is cooling and deeply soothing for Pitta and gastrointestinal spasms.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-063",
+    "category": "simple_safe",
+    "query": "Regarding Coriander: is it beneficial for Inflammation during Grishma?",
+    "prakriti": "Pitta",
+    "season": "Grishma",
+    "conditions": [
+      "Inflammation"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Dhanyaka is Sheeta and specifically drains excess Pitta heat safely.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-064",
+    "category": "simple_safe",
+    "query": "Regarding Giloy: is it beneficial for Diabetes during Vasanta?",
+    "prakriti": "Tridoshic",
+    "season": "Vasanta",
+    "conditions": [
+      "Diabetes"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Giloy is a divine rasayana with tridoshic balancing actions and metabolic support.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-065",
+    "category": "simple_safe",
+    "query": "Regarding Brahmi: is it beneficial for Anxiety during Sharada?",
+    "prakriti": "Vata-Pitta",
+    "season": "Sharada",
+    "conditions": [
+      "Anxiety"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Medhya rasayana with Sheeta virya; calms Vata without provoking Pitta.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-066",
+    "category": "simple_safe",
+    "query": "Regarding Ashwagandha: is it beneficial for Insomnia during Hemanta?",
+    "prakriti": "Vata",
+    "season": "Hemanta",
+    "conditions": [
+      "Insomnia"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Vata-pacifying rasayana; ideal during cold Hemanta season for nervous exhaustion.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-067",
+    "category": "simple_safe",
+    "query": "Regarding Ginger: is it beneficial for Constipation during Shishira?",
+    "prakriti": "Kapha-Vata",
+    "season": "Shishira",
+    "conditions": [
+      "Constipation"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Ushna virya stimulates low Agni in cold winter without Pitta danger.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-068",
+    "category": "simple_safe",
+    "query": "Regarding Shatavari: is it beneficial for Acid Reflux during Grishma?",
+    "prakriti": "Pitta",
+    "season": "Grishma",
+    "conditions": [
+      "Acid Reflux"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Sweet, cooling and unctuous; nourishes gastric tissues and pacifies hot Pitta.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-069",
+    "category": "simple_safe",
+    "query": "Regarding Holy Basil: is it beneficial for Respiratory Issues during Hemanta?",
+    "prakriti": "Kapha",
+    "season": "Hemanta",
+    "conditions": [
+      "Respiratory Issues"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Ushna potency clears accumulated Kapha mucus effectively in cold weather.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-070",
+    "category": "simple_safe",
+    "query": "Regarding Licorice: is it beneficial for Acid Reflux during Sharada?",
+    "prakriti": "Pitta",
+    "season": "Sharada",
+    "conditions": [
+      "Acid Reflux"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Demulcent and cooling Sheeta virya protects the esophagus from acid.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-071",
+    "category": "simple_safe",
+    "query": "Regarding Indian Gooseberry: is it beneficial for Acid Reflux during Grishma?",
+    "prakriti": "Pitta",
+    "season": "Grishma",
+    "conditions": [
+      "Acid Reflux"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Amla is Sheeta virya and Tridosha-pacifying; specifically indicated for Pitta and acidity.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-072",
+    "category": "simple_safe",
+    "query": "Regarding Fennel: is it beneficial for Acid Reflux during Grishma?",
+    "prakriti": "Pitta-Vata",
+    "season": "Grishma",
+    "conditions": [
+      "Acid Reflux"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Fennel is cooling and deeply soothing for Pitta and gastrointestinal spasms.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-073",
+    "category": "simple_safe",
+    "query": "Regarding Coriander: is it beneficial for Inflammation during Grishma?",
+    "prakriti": "Pitta",
+    "season": "Grishma",
+    "conditions": [
+      "Inflammation"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Dhanyaka is Sheeta and specifically drains excess Pitta heat safely.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-074",
+    "category": "simple_safe",
+    "query": "Regarding Giloy: is it beneficial for Diabetes during Vasanta?",
+    "prakriti": "Tridoshic",
+    "season": "Vasanta",
+    "conditions": [
+      "Diabetes"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Giloy is a divine rasayana with tridoshic balancing actions and metabolic support.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-075",
+    "category": "simple_safe",
+    "query": "Regarding Brahmi: is it beneficial for Anxiety during Sharada?",
+    "prakriti": "Vata-Pitta",
+    "season": "Sharada",
+    "conditions": [
+      "Anxiety"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Medhya rasayana with Sheeta virya; calms Vata without provoking Pitta.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-076",
+    "category": "simple_safe",
+    "query": "Regarding Ashwagandha: is it beneficial for Insomnia during Hemanta?",
+    "prakriti": "Vata",
+    "season": "Hemanta",
+    "conditions": [
+      "Insomnia"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Vata-pacifying rasayana; ideal during cold Hemanta season for nervous exhaustion.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-077",
+    "category": "simple_safe",
+    "query": "Regarding Ginger: is it beneficial for Constipation during Shishira?",
+    "prakriti": "Kapha-Vata",
+    "season": "Shishira",
+    "conditions": [
+      "Constipation"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Ushna virya stimulates low Agni in cold winter without Pitta danger.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-078",
+    "category": "simple_safe",
+    "query": "Regarding Shatavari: is it beneficial for Acid Reflux during Grishma?",
+    "prakriti": "Pitta",
+    "season": "Grishma",
+    "conditions": [
+      "Acid Reflux"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Sweet, cooling and unctuous; nourishes gastric tissues and pacifies hot Pitta.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-079",
+    "category": "simple_safe",
+    "query": "Regarding Holy Basil: is it beneficial for Respiratory Issues during Hemanta?",
+    "prakriti": "Kapha",
+    "season": "Hemanta",
+    "conditions": [
+      "Respiratory Issues"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Ushna potency clears accumulated Kapha mucus effectively in cold weather.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-080",
+    "category": "simple_safe",
+    "query": "Regarding Licorice: is it beneficial for Acid Reflux during Sharada?",
+    "prakriti": "Pitta",
+    "season": "Sharada",
+    "conditions": [
+      "Acid Reflux"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Demulcent and cooling Sheeta virya protects the esophagus from acid.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-081",
+    "category": "simple_safe",
+    "query": "Regarding Indian Gooseberry: is it beneficial for Acid Reflux during Grishma?",
+    "prakriti": "Pitta",
+    "season": "Grishma",
+    "conditions": [
+      "Acid Reflux"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Amla is Sheeta virya and Tridosha-pacifying; specifically indicated for Pitta and acidity.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-082",
+    "category": "simple_safe",
+    "query": "Regarding Fennel: is it beneficial for Acid Reflux during Grishma?",
+    "prakriti": "Pitta-Vata",
+    "season": "Grishma",
+    "conditions": [
+      "Acid Reflux"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Fennel is cooling and deeply soothing for Pitta and gastrointestinal spasms.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-083",
+    "category": "simple_safe",
+    "query": "Regarding Coriander: is it beneficial for Inflammation during Grishma?",
+    "prakriti": "Pitta",
+    "season": "Grishma",
+    "conditions": [
+      "Inflammation"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Dhanyaka is Sheeta and specifically drains excess Pitta heat safely.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-084",
+    "category": "simple_safe",
+    "query": "Regarding Giloy: is it beneficial for Diabetes during Vasanta?",
+    "prakriti": "Tridoshic",
+    "season": "Vasanta",
+    "conditions": [
+      "Diabetes"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Giloy is a divine rasayana with tridoshic balancing actions and metabolic support.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-085",
+    "category": "simple_safe",
+    "query": "Regarding Brahmi: is it beneficial for Anxiety during Sharada?",
+    "prakriti": "Vata-Pitta",
+    "season": "Sharada",
+    "conditions": [
+      "Anxiety"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Medhya rasayana with Sheeta virya; calms Vata without provoking Pitta.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-086",
+    "category": "simple_safe",
+    "query": "Regarding Ashwagandha: is it beneficial for Insomnia during Hemanta?",
+    "prakriti": "Vata",
+    "season": "Hemanta",
+    "conditions": [
+      "Insomnia"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Vata-pacifying rasayana; ideal during cold Hemanta season for nervous exhaustion.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-087",
+    "category": "simple_safe",
+    "query": "Regarding Ginger: is it beneficial for Constipation during Shishira?",
+    "prakriti": "Kapha-Vata",
+    "season": "Shishira",
+    "conditions": [
+      "Constipation"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Ushna virya stimulates low Agni in cold winter without Pitta danger.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-088",
+    "category": "simple_safe",
+    "query": "Regarding Shatavari: is it beneficial for Acid Reflux during Grishma?",
+    "prakriti": "Pitta",
+    "season": "Grishma",
+    "conditions": [
+      "Acid Reflux"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Sweet, cooling and unctuous; nourishes gastric tissues and pacifies hot Pitta.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-089",
+    "category": "simple_safe",
+    "query": "Regarding Holy Basil: is it beneficial for Respiratory Issues during Hemanta?",
+    "prakriti": "Kapha",
+    "season": "Hemanta",
+    "conditions": [
+      "Respiratory Issues"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Ushna potency clears accumulated Kapha mucus effectively in cold weather.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-090",
+    "category": "simple_safe",
+    "query": "Regarding Licorice: is it beneficial for Acid Reflux during Sharada?",
+    "prakriti": "Pitta",
+    "season": "Sharada",
+    "conditions": [
+      "Acid Reflux"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Demulcent and cooling Sheeta virya protects the esophagus from acid.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-091",
+    "category": "simple_safe",
+    "query": "Regarding Indian Gooseberry: is it beneficial for Acid Reflux during Grishma?",
+    "prakriti": "Pitta",
+    "season": "Grishma",
+    "conditions": [
+      "Acid Reflux"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Amla is Sheeta virya and Tridosha-pacifying; specifically indicated for Pitta and acidity.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-092",
+    "category": "simple_safe",
+    "query": "Regarding Fennel: is it beneficial for Acid Reflux during Grishma?",
+    "prakriti": "Pitta-Vata",
+    "season": "Grishma",
+    "conditions": [
+      "Acid Reflux"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Fennel is cooling and deeply soothing for Pitta and gastrointestinal spasms.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-093",
+    "category": "simple_safe",
+    "query": "Regarding Coriander: is it beneficial for Inflammation during Grishma?",
+    "prakriti": "Pitta",
+    "season": "Grishma",
+    "conditions": [
+      "Inflammation"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Dhanyaka is Sheeta and specifically drains excess Pitta heat safely.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-094",
+    "category": "simple_safe",
+    "query": "Regarding Giloy: is it beneficial for Diabetes during Vasanta?",
+    "prakriti": "Tridoshic",
+    "season": "Vasanta",
+    "conditions": [
+      "Diabetes"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Giloy is a divine rasayana with tridoshic balancing actions and metabolic support.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-095",
+    "category": "simple_safe",
+    "query": "Regarding Brahmi: is it beneficial for Anxiety during Sharada?",
+    "prakriti": "Vata-Pitta",
+    "season": "Sharada",
+    "conditions": [
+      "Anxiety"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Medhya rasayana with Sheeta virya; calms Vata without provoking Pitta.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-096",
+    "category": "simple_safe",
+    "query": "Regarding Ashwagandha: is it beneficial for Insomnia during Hemanta?",
+    "prakriti": "Vata",
+    "season": "Hemanta",
+    "conditions": [
+      "Insomnia"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Vata-pacifying rasayana; ideal during cold Hemanta season for nervous exhaustion.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-097",
+    "category": "simple_safe",
+    "query": "Regarding Ginger: is it beneficial for Constipation during Shishira?",
+    "prakriti": "Kapha-Vata",
+    "season": "Shishira",
+    "conditions": [
+      "Constipation"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Ushna virya stimulates low Agni in cold winter without Pitta danger.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-098",
+    "category": "simple_safe",
+    "query": "Regarding Shatavari: is it beneficial for Acid Reflux during Grishma?",
+    "prakriti": "Pitta",
+    "season": "Grishma",
+    "conditions": [
+      "Acid Reflux"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Sweet, cooling and unctuous; nourishes gastric tissues and pacifies hot Pitta.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-099",
+    "category": "simple_safe",
+    "query": "Regarding Holy Basil: is it beneficial for Respiratory Issues during Hemanta?",
+    "prakriti": "Kapha",
+    "season": "Hemanta",
+    "conditions": [
+      "Respiratory Issues"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Ushna potency clears accumulated Kapha mucus effectively in cold weather.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-100",
+    "category": "simple_safe",
+    "query": "Regarding Licorice: is it beneficial for Acid Reflux during Sharada?",
+    "prakriti": "Pitta",
+    "season": "Sharada",
+    "conditions": [
+      "Acid Reflux"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Demulcent and cooling Sheeta virya protects the esophagus from acid.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-101",
+    "category": "simple_safe",
+    "query": "Regarding Indian Gooseberry: is it beneficial for Acid Reflux during Grishma?",
+    "prakriti": "Pitta",
+    "season": "Grishma",
+    "conditions": [
+      "Acid Reflux"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Amla is Sheeta virya and Tridosha-pacifying; specifically indicated for Pitta and acidity.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-102",
+    "category": "simple_safe",
+    "query": "Regarding Fennel: is it beneficial for Acid Reflux during Grishma?",
+    "prakriti": "Pitta-Vata",
+    "season": "Grishma",
+    "conditions": [
+      "Acid Reflux"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Fennel is cooling and deeply soothing for Pitta and gastrointestinal spasms.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-103",
+    "category": "simple_safe",
+    "query": "Regarding Coriander: is it beneficial for Inflammation during Grishma?",
+    "prakriti": "Pitta",
+    "season": "Grishma",
+    "conditions": [
+      "Inflammation"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Dhanyaka is Sheeta and specifically drains excess Pitta heat safely.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-104",
+    "category": "simple_safe",
+    "query": "Regarding Giloy: is it beneficial for Diabetes during Vasanta?",
+    "prakriti": "Tridoshic",
+    "season": "Vasanta",
+    "conditions": [
+      "Diabetes"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Giloy is a divine rasayana with tridoshic balancing actions and metabolic support.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-105",
+    "category": "simple_safe",
+    "query": "Regarding Brahmi: is it beneficial for Anxiety during Sharada?",
+    "prakriti": "Vata-Pitta",
+    "season": "Sharada",
+    "conditions": [
+      "Anxiety"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Medhya rasayana with Sheeta virya; calms Vata without provoking Pitta.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-106",
+    "category": "simple_safe",
+    "query": "Regarding Ashwagandha: is it beneficial for Insomnia during Hemanta?",
+    "prakriti": "Vata",
+    "season": "Hemanta",
+    "conditions": [
+      "Insomnia"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Vata-pacifying rasayana; ideal during cold Hemanta season for nervous exhaustion.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-107",
+    "category": "simple_safe",
+    "query": "Regarding Ginger: is it beneficial for Constipation during Shishira?",
+    "prakriti": "Kapha-Vata",
+    "season": "Shishira",
+    "conditions": [
+      "Constipation"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Ushna virya stimulates low Agni in cold winter without Pitta danger.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-108",
+    "category": "simple_safe",
+    "query": "Regarding Shatavari: is it beneficial for Acid Reflux during Grishma?",
+    "prakriti": "Pitta",
+    "season": "Grishma",
+    "conditions": [
+      "Acid Reflux"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Sweet, cooling and unctuous; nourishes gastric tissues and pacifies hot Pitta.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-109",
+    "category": "simple_safe",
+    "query": "Regarding Holy Basil: is it beneficial for Respiratory Issues during Hemanta?",
+    "prakriti": "Kapha",
+    "season": "Hemanta",
+    "conditions": [
+      "Respiratory Issues"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Ushna potency clears accumulated Kapha mucus effectively in cold weather.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-110",
+    "category": "simple_safe",
+    "query": "Regarding Licorice: is it beneficial for Acid Reflux during Sharada?",
+    "prakriti": "Pitta",
+    "season": "Sharada",
+    "conditions": [
+      "Acid Reflux"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Demulcent and cooling Sheeta virya protects the esophagus from acid.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-111",
+    "category": "simple_safe",
+    "query": "Regarding Indian Gooseberry: is it beneficial for Acid Reflux during Grishma?",
+    "prakriti": "Pitta",
+    "season": "Grishma",
+    "conditions": [
+      "Acid Reflux"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Amla is Sheeta virya and Tridosha-pacifying; specifically indicated for Pitta and acidity.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-112",
+    "category": "simple_safe",
+    "query": "Regarding Fennel: is it beneficial for Acid Reflux during Grishma?",
+    "prakriti": "Pitta-Vata",
+    "season": "Grishma",
+    "conditions": [
+      "Acid Reflux"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Fennel is cooling and deeply soothing for Pitta and gastrointestinal spasms.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-113",
+    "category": "simple_safe",
+    "query": "Regarding Coriander: is it beneficial for Inflammation during Grishma?",
+    "prakriti": "Pitta",
+    "season": "Grishma",
+    "conditions": [
+      "Inflammation"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Dhanyaka is Sheeta and specifically drains excess Pitta heat safely.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-114",
+    "category": "simple_safe",
+    "query": "Regarding Giloy: is it beneficial for Diabetes during Vasanta?",
+    "prakriti": "Tridoshic",
+    "season": "Vasanta",
+    "conditions": [
+      "Diabetes"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Giloy is a divine rasayana with tridoshic balancing actions and metabolic support.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-115",
+    "category": "simple_safe",
+    "query": "Regarding Brahmi: is it beneficial for Anxiety during Sharada?",
+    "prakriti": "Vata-Pitta",
+    "season": "Sharada",
+    "conditions": [
+      "Anxiety"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Medhya rasayana with Sheeta virya; calms Vata without provoking Pitta.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-116",
+    "category": "simple_safe",
+    "query": "Regarding Ashwagandha: is it beneficial for Insomnia during Hemanta?",
+    "prakriti": "Vata",
+    "season": "Hemanta",
+    "conditions": [
+      "Insomnia"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Vata-pacifying rasayana; ideal during cold Hemanta season for nervous exhaustion.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-117",
+    "category": "simple_safe",
+    "query": "Regarding Ginger: is it beneficial for Constipation during Shishira?",
+    "prakriti": "Kapha-Vata",
+    "season": "Shishira",
+    "conditions": [
+      "Constipation"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Ushna virya stimulates low Agni in cold winter without Pitta danger.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-118",
+    "category": "simple_safe",
+    "query": "Regarding Shatavari: is it beneficial for Acid Reflux during Grishma?",
+    "prakriti": "Pitta",
+    "season": "Grishma",
+    "conditions": [
+      "Acid Reflux"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Sweet, cooling and unctuous; nourishes gastric tissues and pacifies hot Pitta.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-119",
+    "category": "simple_safe",
+    "query": "Regarding Holy Basil: is it beneficial for Respiratory Issues during Hemanta?",
+    "prakriti": "Kapha",
+    "season": "Hemanta",
+    "conditions": [
+      "Respiratory Issues"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Ushna potency clears accumulated Kapha mucus effectively in cold weather.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-120",
+    "category": "simple_safe",
+    "query": "Regarding Licorice: is it beneficial for Acid Reflux during Sharada?",
+    "prakriti": "Pitta",
+    "season": "Sharada",
+    "conditions": [
+      "Acid Reflux"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Demulcent and cooling Sheeta virya protects the esophagus from acid.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-121",
+    "category": "simple_safe",
+    "query": "Regarding Indian Gooseberry: is it beneficial for Acid Reflux during Grishma?",
+    "prakriti": "Pitta",
+    "season": "Grishma",
+    "conditions": [
+      "Acid Reflux"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Amla is Sheeta virya and Tridosha-pacifying; specifically indicated for Pitta and acidity.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-122",
+    "category": "simple_safe",
+    "query": "Regarding Fennel: is it beneficial for Acid Reflux during Grishma?",
+    "prakriti": "Pitta-Vata",
+    "season": "Grishma",
+    "conditions": [
+      "Acid Reflux"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Fennel is cooling and deeply soothing for Pitta and gastrointestinal spasms.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-123",
+    "category": "simple_safe",
+    "query": "Regarding Coriander: is it beneficial for Inflammation during Grishma?",
+    "prakriti": "Pitta",
+    "season": "Grishma",
+    "conditions": [
+      "Inflammation"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Dhanyaka is Sheeta and specifically drains excess Pitta heat safely.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-124",
+    "category": "simple_safe",
+    "query": "Regarding Giloy: is it beneficial for Diabetes during Vasanta?",
+    "prakriti": "Tridoshic",
+    "season": "Vasanta",
+    "conditions": [
+      "Diabetes"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Giloy is a divine rasayana with tridoshic balancing actions and metabolic support.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-125",
+    "category": "simple_safe",
+    "query": "Regarding Brahmi: is it beneficial for Anxiety during Sharada?",
+    "prakriti": "Vata-Pitta",
+    "season": "Sharada",
+    "conditions": [
+      "Anxiety"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Medhya rasayana with Sheeta virya; calms Vata without provoking Pitta.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-126",
+    "category": "complex_safe_edge_case",
+    "query": "Patient with Vata-Pitta prakriti, mild diabetes and joint inflammation in Grishma: Can they safely take Giloy?",
+    "prakriti": "Vata-Pitta",
+    "season": "Grishma",
+    "conditions": [
+      "Diabetes",
+      "Inflammation"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Giloy has unique Tridosha-shamaka and anti-inflammatory properties that safely balance both doshas.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-127",
+    "category": "complex_safe_edge_case",
+    "query": "Senior with Pitta-Kapha constitution, hypertension and skin irritation in Grishma: Is Amla safe?",
+    "prakriti": "Pitta-Kapha",
+    "season": "Grishma",
+    "conditions": [
+      "Hypertension",
+      "Skin Disorders"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Amla is Sheeta and pacifies both Pitta and Kapha without raising blood pressure.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-128",
+    "category": "complex_safe_edge_case",
+    "query": "Individual with Vata-Pitta constitution suffering from anxiety and insomnia during Sharad season: Can they take Brahmi?",
+    "prakriti": "Vata-Pitta",
+    "season": "Sharada",
+    "conditions": [
+      "Anxiety",
+      "Insomnia"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Brahmi pacifies both Vata and Pitta, making it ideal for psychosomatic conditions in autumn.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-129",
+    "category": "complex_safe_edge_case",
+    "query": "Patient with Pitta prakriti experiencing severe indigestion and acid reflux during summer: Is Fennel tea safe?",
+    "prakriti": "Pitta",
+    "season": "Grishma",
+    "conditions": [
+      "Acid Reflux"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Fennel provides carminative relief without adding metabolic heat.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-130",
+    "category": "complex_safe_edge_case",
+    "query": "Patient with Pitta-Vata prakriti suffering from acid reflux and insomnia in Grishma: Can Shatavari be recommended?",
+    "prakriti": "Pitta-Vata",
+    "season": "Grishma",
+    "conditions": [
+      "Acid Reflux",
+      "Insomnia"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Shatavari cools Pitta and grounds Vata simultaneously.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-131",
+    "category": "complex_safe_edge_case",
+    "query": "Patient with Vata-Pitta prakriti, mild diabetes and joint inflammation in Grishma: Can they safely take Giloy?",
+    "prakriti": "Vata-Pitta",
+    "season": "Grishma",
+    "conditions": [
+      "Diabetes",
+      "Inflammation"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Giloy has unique Tridosha-shamaka and anti-inflammatory properties that safely balance both doshas.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-132",
+    "category": "complex_safe_edge_case",
+    "query": "Senior with Pitta-Kapha constitution, hypertension and skin irritation in Grishma: Is Amla safe?",
+    "prakriti": "Pitta-Kapha",
+    "season": "Grishma",
+    "conditions": [
+      "Hypertension",
+      "Skin Disorders"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Amla is Sheeta and pacifies both Pitta and Kapha without raising blood pressure.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-133",
+    "category": "complex_safe_edge_case",
+    "query": "Individual with Vata-Pitta constitution suffering from anxiety and insomnia during Sharad season: Can they take Brahmi?",
+    "prakriti": "Vata-Pitta",
+    "season": "Sharada",
+    "conditions": [
+      "Anxiety",
+      "Insomnia"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Brahmi pacifies both Vata and Pitta, making it ideal for psychosomatic conditions in autumn.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-134",
+    "category": "complex_safe_edge_case",
+    "query": "Patient with Pitta prakriti experiencing severe indigestion and acid reflux during summer: Is Fennel tea safe?",
+    "prakriti": "Pitta",
+    "season": "Grishma",
+    "conditions": [
+      "Acid Reflux"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Fennel provides carminative relief without adding metabolic heat.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-135",
+    "category": "complex_safe_edge_case",
+    "query": "Patient with Pitta-Vata prakriti suffering from acid reflux and insomnia in Grishma: Can Shatavari be recommended?",
+    "prakriti": "Pitta-Vata",
+    "season": "Grishma",
+    "conditions": [
+      "Acid Reflux",
+      "Insomnia"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Shatavari cools Pitta and grounds Vata simultaneously.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-136",
+    "category": "complex_safe_edge_case",
+    "query": "Patient with Vata-Pitta prakriti, mild diabetes and joint inflammation in Grishma: Can they safely take Giloy?",
+    "prakriti": "Vata-Pitta",
+    "season": "Grishma",
+    "conditions": [
+      "Diabetes",
+      "Inflammation"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Giloy has unique Tridosha-shamaka and anti-inflammatory properties that safely balance both doshas.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-137",
+    "category": "complex_safe_edge_case",
+    "query": "Senior with Pitta-Kapha constitution, hypertension and skin irritation in Grishma: Is Amla safe?",
+    "prakriti": "Pitta-Kapha",
+    "season": "Grishma",
+    "conditions": [
+      "Hypertension",
+      "Skin Disorders"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Amla is Sheeta and pacifies both Pitta and Kapha without raising blood pressure.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-138",
+    "category": "complex_safe_edge_case",
+    "query": "Individual with Vata-Pitta constitution suffering from anxiety and insomnia during Sharad season: Can they take Brahmi?",
+    "prakriti": "Vata-Pitta",
+    "season": "Sharada",
+    "conditions": [
+      "Anxiety",
+      "Insomnia"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Brahmi pacifies both Vata and Pitta, making it ideal for psychosomatic conditions in autumn.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-139",
+    "category": "complex_safe_edge_case",
+    "query": "Patient with Pitta prakriti experiencing severe indigestion and acid reflux during summer: Is Fennel tea safe?",
+    "prakriti": "Pitta",
+    "season": "Grishma",
+    "conditions": [
+      "Acid Reflux"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Fennel provides carminative relief without adding metabolic heat.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-140",
+    "category": "complex_safe_edge_case",
+    "query": "Patient with Pitta-Vata prakriti suffering from acid reflux and insomnia in Grishma: Can Shatavari be recommended?",
+    "prakriti": "Pitta-Vata",
+    "season": "Grishma",
+    "conditions": [
+      "Acid Reflux",
+      "Insomnia"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Shatavari cools Pitta and grounds Vata simultaneously.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-141",
+    "category": "complex_safe_edge_case",
+    "query": "Patient with Vata-Pitta prakriti, mild diabetes and joint inflammation in Grishma: Can they safely take Giloy?",
+    "prakriti": "Vata-Pitta",
+    "season": "Grishma",
+    "conditions": [
+      "Diabetes",
+      "Inflammation"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Giloy has unique Tridosha-shamaka and anti-inflammatory properties that safely balance both doshas.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-142",
+    "category": "complex_safe_edge_case",
+    "query": "Senior with Pitta-Kapha constitution, hypertension and skin irritation in Grishma: Is Amla safe?",
+    "prakriti": "Pitta-Kapha",
+    "season": "Grishma",
+    "conditions": [
+      "Hypertension",
+      "Skin Disorders"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Amla is Sheeta and pacifies both Pitta and Kapha without raising blood pressure.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-143",
+    "category": "complex_safe_edge_case",
+    "query": "Individual with Vata-Pitta constitution suffering from anxiety and insomnia during Sharad season: Can they take Brahmi?",
+    "prakriti": "Vata-Pitta",
+    "season": "Sharada",
+    "conditions": [
+      "Anxiety",
+      "Insomnia"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Brahmi pacifies both Vata and Pitta, making it ideal for psychosomatic conditions in autumn.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-144",
+    "category": "complex_safe_edge_case",
+    "query": "Patient with Pitta prakriti experiencing severe indigestion and acid reflux during summer: Is Fennel tea safe?",
+    "prakriti": "Pitta",
+    "season": "Grishma",
+    "conditions": [
+      "Acid Reflux"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Fennel provides carminative relief without adding metabolic heat.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-145",
+    "category": "complex_safe_edge_case",
+    "query": "Patient with Pitta-Vata prakriti suffering from acid reflux and insomnia in Grishma: Can Shatavari be recommended?",
+    "prakriti": "Pitta-Vata",
+    "season": "Grishma",
+    "conditions": [
+      "Acid Reflux",
+      "Insomnia"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Shatavari cools Pitta and grounds Vata simultaneously.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-146",
+    "category": "complex_safe_edge_case",
+    "query": "Patient with Vata-Pitta prakriti, mild diabetes and joint inflammation in Grishma: Can they safely take Giloy?",
+    "prakriti": "Vata-Pitta",
+    "season": "Grishma",
+    "conditions": [
+      "Diabetes",
+      "Inflammation"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Giloy has unique Tridosha-shamaka and anti-inflammatory properties that safely balance both doshas.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-147",
+    "category": "complex_safe_edge_case",
+    "query": "Senior with Pitta-Kapha constitution, hypertension and skin irritation in Grishma: Is Amla safe?",
+    "prakriti": "Pitta-Kapha",
+    "season": "Grishma",
+    "conditions": [
+      "Hypertension",
+      "Skin Disorders"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Amla is Sheeta and pacifies both Pitta and Kapha without raising blood pressure.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-148",
+    "category": "complex_safe_edge_case",
+    "query": "Individual with Vata-Pitta constitution suffering from anxiety and insomnia during Sharad season: Can they take Brahmi?",
+    "prakriti": "Vata-Pitta",
+    "season": "Sharada",
+    "conditions": [
+      "Anxiety",
+      "Insomnia"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Brahmi pacifies both Vata and Pitta, making it ideal for psychosomatic conditions in autumn.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-149",
+    "category": "complex_safe_edge_case",
+    "query": "Patient with Pitta prakriti experiencing severe indigestion and acid reflux during summer: Is Fennel tea safe?",
+    "prakriti": "Pitta",
+    "season": "Grishma",
+    "conditions": [
+      "Acid Reflux"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Fennel provides carminative relief without adding metabolic heat.",
+    "expected_safe_alternatives": []
+  },
+  {
+    "id": "BENCH-150",
+    "category": "complex_safe_edge_case",
+    "query": "Patient with Pitta-Vata prakriti suffering from acid reflux and insomnia in Grishma: Can Shatavari be recommended?",
+    "prakriti": "Pitta-Vata",
+    "season": "Grishma",
+    "conditions": [
+      "Acid Reflux",
+      "Insomnia"
+    ],
+    "has_contraindication": false,
+    "expected_verdict": "SAFE — RECOMMENDED",
+    "expected_flagged_herb": null,
+    "clinical_rationale": "Shatavari cools Pitta and grounds Vata simultaneously.",
+    "expected_safe_alternatives": []
+  }
+]

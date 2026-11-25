@@ -1,5 +1,6 @@
 # Node.js dependencies
 node_modules/
+client/dist/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -44,3 +45,5 @@ __pycache__/
 *.pyo
 .env/
 venv/
+data/clinical_feedback.jsonl
+patent related things/

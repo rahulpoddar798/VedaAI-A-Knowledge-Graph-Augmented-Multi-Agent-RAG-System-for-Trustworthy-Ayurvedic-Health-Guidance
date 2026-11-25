@@ -1,6 +1,31 @@
 {
+  "name": "vedaai",
+  "version": "1.0.0",
+  "description": "VedaAI: Knowledge-Graph Augmented Multi-Agent RAG for Ayurvedic Safety",
+  "main": "demo.js",
+  "scripts": {
+    "start": "node server.js",
+    "serve": "node server.js",
+    "build:web": "npm --prefix client run build && node scripts/publish_client.js",
+    "cli": "node run_pipeline.js",
+    "chat": "node interactive.js",
+    "audit": "node scripts/test_all_98k_rows.js",
+    "test:vision": "node scripts/test_phase4_vision.js",
+    "test:solution-a": "node scripts/test_solution_a.js",
+    "generate:benchmark": "node scripts/generate_benchmark_150.js",
+    "benchmark": "node scripts/run_ablation_benchmark.js",
+    "demo": "node demo.js",
+    "test": "node test_phase1_comprehensive.js",
+    "query": "node query_herb.js"
+  },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "@langchain/core": "^1.5.0",
+    "@langchain/langgraph": "^1.7.5",
+    "cors": "^2.8.6",
     "dotenv": "^18.0.7",
+    "express": "^5.3.0",
+    "multer": "^2.5.0",
     "neo4j-driver": "^6.2.0"
   }
 }

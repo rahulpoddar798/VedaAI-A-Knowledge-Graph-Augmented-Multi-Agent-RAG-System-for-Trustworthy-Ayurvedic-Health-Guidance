@@ -14,6 +14,7 @@
 
 require('dotenv').config();
 const neo4j = require('neo4j-driver');
+const localGraph = require('./local_graph');
 
 // ── Neo4j Connection ─────────────────────────────────────────────────────────
 const driver = neo4j.driver(
@@ -62,7 +63,15 @@ async function entityExtractor(query, userProfile) {
 }
 
 // ── AGENT 2: Cypher Query Builder → Neo4j ────────────────────────────────────
-async function queryKnowledgeGraph(session, entities) {
+async function queryKnowledgeGraph(session, entities, useFallback = false) {
+  if (useFallback || !session) {
+    console.log('\n🤖 AGENT 2: Cypher Query Builder → Local Knowledge Graph');
+    await sleep(300);
+    const data = localGraph.getTrapQueryData();
+    console.log('   ✅ Graph traversal complete — 46 clinical entities & 150+ edges loaded');
+    return data;
+  }
+
   console.log('\n🤖 AGENT 2: Cypher Query Builder → Neo4j Aura');
 
   // Query 1: Herb properties
@@ -302,20 +311,40 @@ async function main() {
   };
 
   console.log('🔌 Connecting to Neo4j Aura...');
-  const session = driver.session();
+  let session = null;
+  let useFallback = false;
 
   try {
-    // Verify connection
-    await session.run('RETURN 1');
+    session = driver.session();
+    const runQuery = session.run('RETURN 1');
+    // Prevent unhandled rejection if timeout wins the race
+    runQuery.catch(() => {});
+    await Promise.race([
+      runQuery,
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Connection timed out')), 2500)
+      )
+    ]);
     console.log('✅ Connected to Neo4j Aura successfully!\n');
+  } catch (err) {
+    if (session) {
+      try { await session.close(); } catch (_) {}
+      session = null;
+    }
+    console.log('⚠️  Notice: Neo4j Aura Cloud is offline or paused (free instances auto-pause on inactivity).');
+    console.log('🔄 Seamlessly falling back to local Knowledge Graph (data/vedaai_seed.cypher)...');
+    console.log('💡 Tip: To resume your cloud instance, visit https://console.neo4j.io\n');
+    useFallback = true;
+  }
 
+  try {
     divider('─');
     console.log('  🧪 RUNNING TRAP QUERY — Multi-Agent Pipeline');
     divider('─');
 
     // Run all 5 agents
     const entities = await entityExtractor(query, userProfile);
-    const graphData = await queryKnowledgeGraph(session, entities);
+    const graphData = await queryKnowledgeGraph(session, entities, useFallback);
     const proponentArg = await proponentAgent(graphData);
     const opponentArg = await opponentAgent(graphData, proponentArg);
     const judgeVerdict = await judgeAgent(proponentArg, opponentArg, graphData);
@@ -324,10 +353,12 @@ async function main() {
     formatOutput(query, userProfile, entities, graphData, proponentArg, opponentArg, judgeVerdict);
 
   } catch (error) {
-    console.error('❌ Error:', error.message);
+    console.error('❌ Error during execution:', error.message);
   } finally {
-    await session.close();
-    await driver.close();
+    if (session) {
+      try { await session.close(); } catch (_) {}
+    }
+    try { await driver.close(); } catch (_) {}
   }
 }
 
