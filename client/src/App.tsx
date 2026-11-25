@@ -15,8 +15,7 @@ import { ConsultationHistoryScreen } from './screens/ConsultationHistoryScreen';
 import { AdminPortalScreen } from './screens/AdminPortalScreen';
 import {
   DEFAULT_PROFILE,
-  HERBS_CATALOG,
-  SAMPLE_CONSULTATIONS
+  HERBS_CATALOG
 } from './data/mockData';
 import type {
   ConsultationRecord,
@@ -25,18 +24,19 @@ import type {
   ScreenId
 } from './types/veda';
 
+import { emptySession, receiveConsultation } from './data/consultation';
+
 export default function App() {
   // Priority screen per specification: Product Label Analyzer opens first
   const [activeScreen, setActiveScreen] = useState<ScreenId>('label-analyzer');
   const [userRole, setUserRole] = useState<'Patient' | 'Clinical Reviewer'>('Patient');
-  const [profile, setProfile] = useState<PatientProfile>({ ...DEFAULT_PROFILE, fullName: '', ageGroup: '', biologicalSex: '', prakriti: '', vikriti: '', season: '', conditions: [], allergies: [], medications: [], dietaryPreference: '', avoidAlcoholExtracts: false, notes: '' });
+  const [profile, setProfile] = useState<PatientProfile>(DEFAULT_PROFILE);
 
   const [backendOnline, setBackendOnline] = useState(false);
   const [herbs, setHerbs] = useState<HerbItem[]>(HERBS_CATALOG);
-  const [consultations, setConsultations] =
-    useState<ConsultationRecord[]>(SAMPLE_CONSULTATIONS);
-  const [activeConsultation, setActiveConsultation] =
-    useState<ConsultationRecord | null>(SAMPLE_CONSULTATIONS[0]);
+  const [session, setSession] = useState(emptySession);
+  const { records: consultations, active: activeConsultation } = session;
+  const setActiveConsultation = (active: ConsultationRecord) => setSession(prev => ({ ...prev, active }));
 
   useEffect(() => {
     let cancelled = false;
@@ -83,11 +83,7 @@ export default function App() {
   }, []);
 
   const handleConsultationComplete = (record: ConsultationRecord) => {
-    setActiveConsultation(record);
-    setConsultations(prev => {
-      const exists = prev.some(c => c.id === record.id);
-      return exists ? prev : [record, ...prev];
-    });
+    setSession(prev => receiveConsultation(prev, record));
   };
 
   // Standalone full-page layouts for Landing and Authentication

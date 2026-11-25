@@ -21,7 +21,9 @@ export type SafetyStatus =
   | 'unverified'
   | 'insufficient_evidence'
   | 'out_of_domain'
-  | 'blocked';
+  | 'blocked'
+  | 'restricted'
+  | 'expert_review_required';
 
 export interface PatientProfile {
   fullName: string;
@@ -127,32 +129,7 @@ export interface HerbItem {
   source?: string;
 }
 
-export interface AgentStage {
-  id: 'entity_extractor' | 'retrieval_planner' | 'proponent' | 'opponent' | 'judge';
-  name: string;
-  role: string;
-  status: 'completed' | 'warning' | 'blocked' | 'pending';
-  latencyMs: number;
-  summary: string;
-  outputLabel: 'Generated Analysis' | 'Verified Graph Output' | 'Arbitrated Verdict';
-  outputs: Array<{ label: string; value: string; kind: 'verified' | 'generated' | 'warning' }>;
-  evidenceRefs: string[];
-}
-
-export interface AssessmentEvidenceItem {
-  id: string;
-  claim: string;
-  source: string;
-  cypherPath?: string;
-  provenanceType: 'Knowledge Graph' | 'Classical Text' | 'Hybrid RAG' | 'Clinical assessment' | 'Retrieved record';
-}
-
-export interface EvidenceAssessment {
-  verdict: { category: string; expertReview: boolean; coverage: { dimension: string; status: string; reason: string }[] };
-  ledger: { id: string; kind: string; title: string | null; location: string | null; excerpt: string; verification: string; metadata: Record<string, string | number> }[];
-  findings: { role: 'proponent' | 'opponent'; text: string; evidenceIds: string[] }[];
-  stages: { name: string; status: string }[];
-}
+export type EvidenceAssessment = ReturnType<typeof import('../../../shared/assessment.mjs').assessment.parse>;
 export interface ConsultationRecord {
   assessment?: EvidenceAssessment;
   id: string;
@@ -165,16 +142,10 @@ export interface ConsultationRecord {
   prakritiSnapshot: string;
   seasonSnapshot: string;
   isSampleData?: boolean;
-  evidenceQuality: number | null;
-  retrievalCoverage: number | null;
-  modelConfidence: number | null;
   missingInformation: string[];
   safetyWarnings: string[];
-  supportingEvidence: AssessmentEvidenceItem[];
-  contradictingEvidence: AssessmentEvidenceItem[];
   clinicalSummary: string;
   disclaimer: string;
-  agentStages: AgentStage[];
   alternatives?: Array<{
     herb_name: string;
     botanical_name?: string;

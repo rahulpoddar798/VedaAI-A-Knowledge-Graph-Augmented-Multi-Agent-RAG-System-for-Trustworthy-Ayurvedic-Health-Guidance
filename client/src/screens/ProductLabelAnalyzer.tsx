@@ -51,12 +51,10 @@ export const ProductLabelAnalyzer: React.FC<ProductLabelAnalyzerProps> = ({
 }) => {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const [selectedPresetId, setSelectedPresetId] = useState<string>(SAMPLE_LABEL_AUDITS[0].id);
-  const [imageUrl, setImageUrl] = useState<string>(SAMPLE_LABEL_AUDITS[0].imageUrl);
+  const [selectedPresetId, setSelectedPresetId] = useState('');
+  const [imageUrl, setImageUrl] = useState('');
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
-  const [auditResult, setAuditResult] = useState<LabelAuditResult | null>(
-    SAMPLE_LABEL_AUDITS[0].audit
-  );
+  const [auditResult, setAuditResult] = useState<LabelAuditResult | null>(null);
 
   const [showOcrOverlay, setShowOcrOverlay] = useState(true);
   const [activeBoxId, setActiveBoxId] = useState<string | null>(null);

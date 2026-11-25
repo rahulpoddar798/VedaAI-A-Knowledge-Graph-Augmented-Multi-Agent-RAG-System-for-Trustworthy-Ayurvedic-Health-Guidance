@@ -12,7 +12,6 @@ import {
 } from 'lucide-react';
 import { PageHeader } from '../components/ui/PageHeader';
 import { SafetyBadge } from '../components/ui/SafetyBadge';
-import { SampleNoticeBanner } from '../components/ui/StatePanels';
 import type { ConsultationRecord, PatientProfile, ScreenId } from '../types/veda';
 
 interface OverviewScreenProps {
@@ -62,20 +61,19 @@ export const OverviewScreen: React.FC<OverviewScreenProps> = ({
         }
       />
 
-      <SampleNoticeBanner text="Overview metrics and recent assessment summaries combine active session context with curated demonstration data." />
 
       {/* 4 Key System Metrics */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         <div className="bg-white border border-[#DDE4DE] rounded-xl p-5 space-y-1.5">
           <p className="text-xs font-medium text-[#758078]">Cataloged Dravyas</p>
           <p className="text-2xl font-semibold tabular-nums text-[#173D32]">{herbCount}</p>
-          <p className="text-xs text-[#758078]">IMPPAT 2.0 &amp; Charaka ontology</p>
+          <p className="text-xs text-[#758078]">Neo4j catalog</p>
         </div>
 
         <div className="bg-white border border-[#DDE4DE] rounded-xl p-5 space-y-1.5">
           <p className="text-xs font-medium text-[#758078]">Reasoning Pipeline</p>
-          <p className="text-2xl font-semibold tabular-nums text-[#26332D]">5 Agents</p>
-          <p className="text-xs text-[#758078]">Adversarial Proponent / Opponent / Judge</p>
+          <p className="text-2xl font-semibold tabular-nums text-[#26332D]">Evidence assessment</p>
+          <p className="text-xs text-[#758078]">Evidence selection and deterministic verdict</p>
         </div>
 
         <div className="bg-white border border-[#DDE4DE] rounded-xl p-5 space-y-1.5">
@@ -91,11 +89,11 @@ export const OverviewScreen: React.FC<OverviewScreenProps> = ({
           <div className="flex items-center gap-2 pt-0.5">
             <SafetyBadge
               status={backendOnline ? 'verified' : 'insufficient_evidence'}
-              labelOverride={backendOnline ? 'Live Connected' : 'Demo Snapshot'}
+              labelOverride={backendOnline ? 'Live Connected' : 'Unavailable'}
               size="md"
             />
           </div>
-          <p className="text-xs text-[#758078] pt-0.5">179+ semantic safety edges</p>
+          <p className="text-xs text-[#758078] pt-0.5">Project-authored ontology</p>
         </div>
       </div>
 
@@ -130,7 +128,7 @@ export const OverviewScreen: React.FC<OverviewScreenProps> = ({
               {
                 screen: 'interactions' as ScreenId,
                 title: 'Drug–Herb Interaction Checker',
-                desc: 'Screen botanical ingredients against prescription medications with evidence tiers.',
+                desc: 'Explore the demonstration and interaction evidence limitations.',
                 Icon: FlaskConical
               },
               {
@@ -142,7 +140,7 @@ export const OverviewScreen: React.FC<OverviewScreenProps> = ({
               {
                 screen: 'agents' as ScreenId,
                 title: 'Agent Transparency',
-                desc: 'Audit the 5-stage multi-agent debate separately from verified graph evidence.',
+                desc: 'Inspect the stages reported for your consultation.',
                 Icon: Cpu
               },
               {
@@ -214,7 +212,7 @@ export const OverviewScreen: React.FC<OverviewScreenProps> = ({
                   }}
                   className="px-3.5 py-2 rounded-lg bg-white border border-[#DDE4DE] text-xs font-medium text-[#26332D] hover:bg-[#F7F5EE] transition cursor-pointer"
                 >
-                  Inspect 5 Agents
+                  Inspect Evidence assessment
                 </button>
               </div>
             </div>

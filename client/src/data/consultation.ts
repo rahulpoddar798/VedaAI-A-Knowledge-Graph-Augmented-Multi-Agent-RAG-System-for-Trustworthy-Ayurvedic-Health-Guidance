@@ -1,4 +1,6 @@
-import type { ConsultationRecord, PatientProfile, SafetyStatus } from '../types/veda';
+import { assessment } from '../../../shared/assessment.mjs';
+import { z } from 'zod';
+import type { ConsultationRecord, PatientProfile } from '../types/veda';
 
 export function clinicalProfile(profile: PatientProfile) {
   const { prakriti, vikriti, season, conditions, medications, allergies, ageGroup, biologicalSex,
@@ -14,58 +16,47 @@ export function appendClinicalProfile(form: FormData, profile: PatientProfile) {
   }
 }
 
-const mapVerdictToStatus = (verdict: string): SafetyStatus => {
-  const v = verdict.toUpperCase();
-  if (v === 'BLOCKED') return 'blocked';
-  if (v === 'RESTRICTED' || v === 'EXPERT_REVIEW_REQUIRED') return 'caution';
-  if (v.includes('OUT_OF_DOMAIN')) return 'out_of_domain';
-  if (v.includes('UNSAFE') || v.includes('DO NOT RECOMMEND') || v.includes('CONTRAINDICATED'))
-    return 'flagged';
-  if (v.includes('CAUTION')) return 'caution';
-  if (v.includes('SAFE') || v.includes('RECOMMENDED') || v.includes('INDICATED'))
-    return 'verified';
-  return 'insufficient_evidence';
-};
+const responseSchema = z.object({
+  success: z.literal(true),
+  consultationId: z.uuid(),
+  isOutOfDomain: z.boolean().optional(),
+  result: z.object({
+    final_verdict: z.string(),
+    summary_message: z.string(),
+    disclaimer: z.string(),
+    evaluated_herbs: z.array(z.string()).default([]),
+    assessment: assessment.optional(),
+    safety_warnings: z.array(z.string()).default([]),
+    missing_coverage: z.array(z.string()).default([]),
+  })
+});
 
-interface PublicConsultation {
-  consultationId: string;
-  confidenceScore?: number | null;
-  result: {
-    assessment?: ConsultationRecord['assessment'];
-    final_verdict: string;
-    summary_message: string;
-    evaluated_herbs?: string[];
-    safety_warnings?: string[];
-    clinical_reasoning?: string[];
-    uncertainty_note?: string;
-    missing_coverage?: string[];
-    disclaimer?: string;
-    suggested_alternatives?: ConsultationRecord['alternatives'];
+export function mapConsultation(payload: unknown, query: string, profile: PatientProfile): ConsultationRecord {
+  const parsed = responseSchema.safeParse(payload);
+  if (!parsed.success) throw new Error('Invalid consultation response or evidence references.');
+  const { consultationId: id, result, isOutOfDomain } = parsed.data;
+  const a = result.assessment;
+  const category = a?.verdict.category;
+  if (a ? (a.verdict.consultationId !== id || category === 'permitted' ||
+      result.final_verdict !== category?.toUpperCase() || isOutOfDomain) :
+      (!isOutOfDomain || result.final_verdict !== 'OUT_OF_DOMAIN')) {
+    throw new Error('Inconsistent consultation verdict.');
+  }
+  return {
+    assessment: a, id, timestamp: new Date(a?.verdict.createdAt ?? Date.now()).toLocaleString(),
+    querySummary: query.trim().slice(0, 76), fullQuery: query.trim(),
+    status: category && category !== 'permitted' ? category : 'out_of_domain', verdictLabel: result.final_verdict,
+    herbsEvaluated: result.evaluated_herbs, prakritiSnapshot: profile.prakriti, seasonSnapshot: profile.season,
+    missingInformation: result.missing_coverage, safetyWarnings: result.safety_warnings,
+    clinicalSummary: result.summary_message, disclaimer: result.disclaimer, isSampleData: false
   };
 }
 
-export function mapConsultation(response: PublicConsultation, query: string, profile: PatientProfile): ConsultationRecord {
-  const { consultationId: id, result } = response;
-  if (!id || !result?.final_verdict) throw new Error('Incomplete consultation response.');
-  const warnings = result.safety_warnings || [];
-  function referenced(role: 'proponent' | 'opponent') {
-    const a = result.assessment;
-    const ids = new Set(a?.findings.filter(f=>f.role===role).flatMap(f=>f.evidenceIds));
-    return (a?.ledger || []).filter(e=>ids.has(e.id)).map(e=>({id:e.id,claim:e.excerpt,
-      source:[e.title,e.location,e.kind,e.verification].filter(Boolean).join(' / '),provenanceType:'Retrieved record' as const}));
-  }
-  function evidence(claim: string, index: number) {
-    return { id: id + '-' + index, claim, source: 'Consultation assessment', provenanceType: 'Clinical assessment' as const };
-  }
-  return {
-    assessment: result.assessment, id, timestamp: new Date().toLocaleTimeString(), querySummary: query.trim().slice(0, 76), fullQuery: query.trim(),
-    status: mapVerdictToStatus(result.final_verdict), verdictLabel: result.final_verdict,
-    herbsEvaluated: result.evaluated_herbs || [], prakritiSnapshot: profile.prakriti, seasonSnapshot: profile.season,
-    evidenceQuality: null, retrievalCoverage: null,
-    modelConfidence: typeof response.confidenceScore === 'number' ? Math.round(response.confidenceScore * 100) : null,
-    missingInformation: [...(result.uncertainty_note ? [result.uncertainty_note] : []), ...(result.missing_coverage || [])],
-    safetyWarnings: warnings, supportingEvidence: result.assessment ? referenced('proponent') : (result.clinical_reasoning || []).filter(line => !warnings.includes(line)).map(evidence),
-    contradictingEvidence: result.assessment ? referenced('opponent') : warnings.map(evidence), clinicalSummary: result.summary_message, agentStages: [],
-    alternatives: result.suggested_alternatives || [], disclaimer: result.disclaimer || '', isSampleData: false
-  };
+export const emptySession: { records: ConsultationRecord[]; active: ConsultationRecord | null } = {
+  records: [], active: null
+};
+
+export function receiveConsultation(session: typeof emptySession, record: ConsultationRecord) {
+  if (record.isSampleData !== false) return session;
+  return { records: [record, ...session.records.filter(item => item.id !== record.id)], active: record };
 }

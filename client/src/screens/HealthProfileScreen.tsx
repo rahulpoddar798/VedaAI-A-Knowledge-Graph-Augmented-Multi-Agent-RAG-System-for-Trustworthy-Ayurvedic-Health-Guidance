@@ -73,7 +73,7 @@ export const HealthProfileScreen: React.FC<HealthProfileScreenProps> = ({
       <PageHeader
         eyebrow="Constitutional & Clinical Context"
         title="Health Profile"
-        description="Configure your Prakriti, seasonal Ritu, declared conditions, allergies, and current medications. Optional fields remain optional so you can start a consultation anytime."
+        description="Configure your Prakriti, seasonal Ritu, declared conditions, allergies, and current medications. Refreshing or closing this page clears your profile."
         actions={
           <>
             <button
@@ -90,7 +90,7 @@ export const HealthProfileScreen: React.FC<HealthProfileScreenProps> = ({
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#173D32] text-white text-sm font-medium hover:bg-[#164B45] transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               <Save className="w-4 h-4" />
-              <span>{isDirty ? 'Save Profile Changes' : 'Profile Saved'}</span>
+              <span>{isDirty ? 'Apply to this session' : 'Session profile'}</span>
             </button>
           </>
         }
@@ -102,7 +102,7 @@ export const HealthProfileScreen: React.FC<HealthProfileScreenProps> = ({
           className="bg-[#E8F5EE] border border-[#B8DEC9] rounded-xl px-4 py-3 flex items-center gap-2 text-xs font-medium text-[#1D6347]"
         >
           <CheckCircle2 className="w-4 h-4 shrink-0" />
-          <span>Health profile updated. Label audits, consultations, and interaction checks will immediately use this context.</span>
+          <span>Profile applied to subsequent consultations in this session.</span>
         </div>
       )}
 

@@ -22,7 +22,6 @@ import {
   SampleNoticeBanner
 } from '../components/ui/StatePanels';
 import { clinicalProfile, appendClinicalProfile, mapConsultation } from '../data/consultation';
-import { SAMPLE_CONSULTATIONS } from '../data/mockData';
 import type {
   ConsultationRecord,
   PatientProfile,
@@ -49,19 +48,16 @@ const SUGGESTED_PROMPTS = [
   {
     label: 'Ginger in Grishma + Acid Reflux',
     query:
-      'Can I take dry Ginger (Shunthi) daily for sluggish digestion during summer while managing acid reflux?',
-    sampleIndex: 0
+      'Can I take dry Ginger (Shunthi) daily for sluggish digestion during summer while managing acid reflux?'
   },
   {
     label: 'Amalaki for winter immunity',
-    query: 'Can I take Indian Gooseberry (Amalaki) daily for antioxidant immunity in winter?',
-    sampleIndex: 1
+    query: 'Can I take Indian Gooseberry (Amalaki) daily for antioxidant immunity in winter?'
   },
   {
     label: 'Ashwagandha in Spring (Kapha)',
     query:
-      'Is Ashwagandha suitable for fatigue during spring if I have Kapha dominance and weight concerns?',
-    sampleIndex: 2
+      'Is Ashwagandha suitable for fatigue during spring if I have Kapha dominance and weight concerns?'
   }
 ];
 
@@ -73,7 +69,7 @@ export const ConsultationScreen: React.FC<ConsultationScreenProps> = ({
   onNavigate
 }) => {
   const [query, setQuery] = useState(
-    activeConsultation?.fullQuery || SUGGESTED_PROMPTS[0].query
+    activeConsultation?.fullQuery || ''
   );
   const [attachedFile, setAttachedFile] = useState<File | null>(null);
   const [attachedPreview, setAttachedPreview] = useState<string | null>(null);
@@ -220,7 +216,7 @@ export const ConsultationScreen: React.FC<ConsultationScreenProps> = ({
                 className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-white border border-[#DDE4DE] text-xs font-medium text-[#26332D] hover:bg-[#E8EFE8]/50 cursor-pointer"
               >
                 <Cpu className="w-3.5 h-3.5 text-[#173D32]" />
-                <span>5-Agent Trace</span>
+                <span>Execution stages</span>
               </button>
             </>
           )
@@ -344,7 +340,6 @@ export const ConsultationScreen: React.FC<ConsultationScreenProps> = ({
                 onClick={() => {
                   setQuery(p.query);
                   setErrorMsg(null);
-                  onConsultationComplete(SAMPLE_CONSULTATIONS[p.sampleIndex]);
                 }}
                 className="px-2.5 py-1 rounded-full border border-[#DDE4DE] bg-[#F7F5EE]/70 text-xs text-[#26332D] hover:bg-[#E8EFE8] transition cursor-pointer"
               >
@@ -354,6 +349,12 @@ export const ConsultationScreen: React.FC<ConsultationScreenProps> = ({
           </div>
         </form>
       </section>
+
+      <details className="rounded-xl border p-4">
+        <summary>View a demonstration consultation</summary>
+        <p>Example question: Can I take ginger during summer?</p>
+        <p>Demonstration only. This example has no backend assessment or evidence ledger.</p>
+      </details>
 
       {errorMsg && (
         <ErrorPanel
@@ -483,7 +484,7 @@ export const ConsultationScreen: React.FC<ConsultationScreenProps> = ({
                   className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-white border border-[#DDE4DE] text-xs font-medium text-[#26332D] hover:bg-[#F7F5EE] transition cursor-pointer"
                 >
                   <Cpu className="w-3.5 h-3.5 text-[#173D32]" />
-                  <span>Inspect 5-Agent Debate</span>
+                  <span>Inspect execution stages</span>
                 </button>
               </div>
 
@@ -523,7 +524,7 @@ export const ConsultationScreen: React.FC<ConsultationScreenProps> = ({
               <MessageSquare className="w-4 h-4 text-[#173D32]" />
               <div>
                 <h3 className="text-sm font-semibold text-[#26332D]">
-                  Follow-Up Clinical Clarification (Anupana, Timing &amp; Diet)
+                  Consultation follow-up
                 </h3>
                 <p className="text-xs text-[#758078]">
                   Ask a scoped follow-up question anchored to this assessment.
@@ -572,7 +573,7 @@ export const ConsultationScreen: React.FC<ConsultationScreenProps> = ({
                 type="text"
                 value={followUpInput}
                 onChange={e => setFollowUpInput(e.target.value)}
-                placeholder="Ask about carrier vehicle (Anupana), dietary Pathya, or timing..."
+                placeholder="Ask about the evidence or restrictions in this assessment..."
                 className="flex-1 h-10 px-3.5 rounded-lg border border-[#DDE4DE] bg-[#F7F5EE]/50 text-xs text-[#26332D] focus:bg-white"
               />
               <button
