@@ -162,7 +162,7 @@ The previous paired t-test was not appropriate for paired binary violation outco
 
 Phase 5 is **not complete**. The benchmark pool and runner are present, but confirmatory empirical validation remains outstanding:
 
-1. **Phase 1 (Dual-Knowledge Data Layer) ✅**: Live Neo4j Aura cloud instance (`ff765efc`), 46 clinical nodes, 146 active relational edges, 5 schema indexes, and 98,956 IMPPAT 2.0 rows audited with 100.0% integrity.
+1. **Phase 1 (Dual-Knowledge Data Layer) ✅**: Live Neo4j Aura cloud instance (`[instance redacted]`), 46 clinical nodes, 146 active relational edges, 5 schema indexes, and 98,956 IMPPAT 2.0 rows audited with 100.0% integrity.
 2. **Phase 2 (Multi-Agent AI Engine) ✅**: LangGraph StateGraph connecting 5 agents (Entity Extractor, Cypher Query Builder, Proponent, Opponent, Judge) with dynamic early-exit conditional routing and Gemini Flash-Lite LLM integration.
 3. **Phase 3 (Full-Stack Web App) ✅**: Express.js API gateway on port 4000, Vite React + TypeScript client on port 3000 styled with authentic shadcn/ui zinc dark design tokens, and real-time Transparency Inspector.
 4. **Phase 4 (Multimodal Vision Agent) ✅**: Gemini multimodal image scanning, Neo4j Graph Membership Verification Gate, package OCR label recognition, and 13/13 Go/No-Go tests passed.

@@ -19,8 +19,8 @@ const path = require('path');
 const neo4j = require('neo4j-driver');
 const llm = require('../engine/llm_client');
 const CypherQueryBuilder = require('../engine/cypher_builder');
-const { buildVedaAIPipeline } = require('../engine/pipeline');
-const { closeDriver } = require('../engine/agents');
+const { buildLegacyPipeline: buildVedaAIPipeline } = require('../engine/pipeline');
+const { closeSharedDriver } = require('../lib/neo4j_config');
 
 // Exact two-sided McNemar p-value from the binomial distribution.
 function exactMcNemarPValue(aOnly, cOnly) {
@@ -188,8 +188,9 @@ async function main() {
   console.log(`   - Safe / Edge Case Queries: ${sampleSize - half}\n`);
 
   // Initialize Neo4j driver and pipelines
-  const user = process.env.NEO4J_USERNAME || 'ff765efc';
-  const driver = neo4j.driver(process.env.NEO4J_URI, neo4j.auth.basic(user, process.env.NEO4J_PASSWORD));
+  const { getNeo4jCredentials } = require('../lib/neo4j_config');
+  const { uri, username, password } = getNeo4jCredentials();
+  const driver = neo4j.driver(uri, neo4j.auth.basic(username, password));
   const cypherBuilder = new CypherQueryBuilder(driver);
   const vedaPipeline = buildVedaAIPipeline();
 
@@ -353,7 +354,7 @@ async function main() {
 
   } finally {
     await driver.close();
-    await closeDriver();
+    await closeSharedDriver();
   }
 }
 

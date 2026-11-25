@@ -1,18 +1,18 @@
 require('dotenv').config();
 const { buildVedaAIPipeline } = require('./engine/pipeline');
-const { closeDriver } = require('./engine/agents');
+const { closeSharedDriver } = require('./lib/neo4j_config');
 
 async function run() {
   const query = process.argv[2] || 'Can I take Ginger for digestion in summer with acid reflux?';
-  const prakriti = process.argv[3] || 'Pitta-Vata';
-  const conditions = process.argv[4] ? process.argv[4].split(',') : ['Acid Reflux'];
-  const season = process.argv[5] || 'Grishma';
+  const prakriti = process.argv[3];
+  const conditions = process.argv[4] ? process.argv[4].split(',') : undefined;
+  const season = process.argv[5];
 
   console.log('═════════════════════════════════════════════════════════════════');
   console.log('  VedaAI — Phase 2 LangGraph Multi-Agent Engine (Dynamic Execution)');
   console.log('═════════════════════════════════════════════════════════════════');
   console.log(`📌 Query: "${query}"`);
-  console.log(`👤 Profile: Prakriti=${prakriti}, Conditions=${conditions.join(', ')}, Season=${season}`);
+  console.log(`👤 Profile: Prakriti=${prakriti}, Conditions=${conditions?.join(', ') || 'unreported'}, Season=${season}`);
 
   const pipeline = buildVedaAIPipeline();
 
@@ -35,7 +35,7 @@ async function run() {
 
     const res = finalState.final_response;
     console.log(`\nVerdict:    ${res.final_verdict}`);
-    console.log(`Confidence: ${(finalState.confidence_score * 100).toFixed(0)}%`);
+    console.log('Assessment policy: ' + finalState.verdict.policyVersion);
     console.log(`Latency:    ${durationMs} ms`);
     console.log(`Summary:    ${res.summary_message}`);
 
@@ -61,7 +61,7 @@ async function run() {
     console.log(`\n⚖️  Disclaimer: ${res.disclaimer}`);
     console.log('═════════════════════════════════════════════════════════════════\n');
   } finally {
-    await closeDriver();
+    await closeSharedDriver();
   }
 }
 

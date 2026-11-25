@@ -1,7 +1,7 @@
 require('dotenv').config();
 const readline = require('readline');
 const { buildVedaAIPipeline } = require('./engine/pipeline');
-const { closeDriver } = require('./engine/agents');
+const { closeSharedDriver } = require('./lib/neo4j_config');
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -27,9 +27,9 @@ async function loop() {
       break;
     }
 
-    const prakriti = await ask('   👤 Your Prakriti (e.g. Vata, Pitta, Kapha, or leave blank): ') || 'Pitta-Vata';
+    const prakriti = await ask('   👤 Your Prakriti (e.g. Vata, Pitta, Kapha, or leave blank): ');
     const conditions = await ask('   🏥 Existing health conditions (e.g. Acid Reflux, none): ') || '';
-    const season = await ask('   ☀️  Current season (e.g. Summer/Grishma, Winter/Shishira, or leave blank): ') || 'Grishma';
+    const season = await ask('   ☀️  Current season (e.g. Summer/Grishma, Winter/Shishira, or leave blank): ');
 
     console.log('\n⏳ Running Multi-Agent Reasoning Pipeline...\n');
 
@@ -39,7 +39,7 @@ async function loop() {
         raw_query: query,
         user_profile: {
           prakriti: prakriti.trim(),
-          chronic_conditions: conditions ? conditions.split(',').map(c => c.trim()) : [],
+          chronic_conditions: conditions ? conditions.split(',').map(c => c.trim()) : undefined,
           current_season: season.trim()
         }
       });
@@ -49,7 +49,7 @@ async function loop() {
 
       console.log('─────────────────────────────────────────────────────────────────');
       console.log(`📋 RESULT: ${res.final_verdict}`);
-      console.log(`📊 Calibrated Confidence: ${(finalState.confidence_score * 100).toFixed(0)}% | Latency: ${durationMs}ms`);
+      console.log('Latency: ' + durationMs + ' ms');
       console.log(`💬 Summary: ${res.summary_message}`);
 
       if (res.risk_explanation) {
@@ -76,12 +76,12 @@ async function loop() {
     }
   }
 
-  await closeDriver();
+  await closeSharedDriver();
   rl.close();
 }
 
 loop().catch(async (e) => {
   console.error(e);
-  await closeDriver();
+  await closeSharedDriver();
   rl.close();
 });

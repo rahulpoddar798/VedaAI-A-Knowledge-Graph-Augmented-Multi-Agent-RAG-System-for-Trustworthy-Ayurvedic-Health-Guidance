@@ -2,13 +2,12 @@ require('dotenv').config();
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const fs = require('fs');
 const path = require('path');
-const neo4j = require('neo4j-driver');
-const CypherQueryBuilder = require('./cypher_builder');
+const { getSharedDriver } = require('../lib/neo4j_config');
 
 class MultimodalVisionAgent {
   constructor() {
     this.apiKey = process.env.GEMINI_API_KEY;
-    if (this.apiKey) {
+    if (this.apiKey && this.apiKey !== 'YOUR_GEMINI_API_KEY') {
       this.genAI = new GoogleGenerativeAI(this.apiKey);
       // High-availability Flash-Lite models with active quota
       this.candidateModels = [
@@ -17,15 +16,11 @@ class MultimodalVisionAgent {
         'gemini-3-flash-preview',
         'gemini-2.5-flash-lite'
       ];
-      this.model = this.genAI.getGenerativeModel({ model: this.candidateModels[0] });
     }
+  }
 
-    const user = process.env.NEO4J_USERNAME || 'ff765efc';
-    this.driver = neo4j.driver(
-      process.env.NEO4J_URI,
-      neo4j.auth.basic(user, process.env.NEO4J_PASSWORD)
-    );
-    this.cypherBuilder = new CypherQueryBuilder(this.driver);
+  getDriver() {
+    return getSharedDriver();
   }
 
   /**
@@ -58,7 +53,7 @@ Analyze the uploaded packaging, medicine bottle, or plant image and return JSON:
       return { verified: [], unverified: [] };
     }
 
-    const session = this.driver.session();
+    const session = this.getDriver().session();
     try {
       const cypher = `
         UNWIND $detectedHerbs AS hName
@@ -75,8 +70,9 @@ Analyze the uploaded packaging, medicine bottle, or plant image and return JSON:
                hName AS query_input
       `;
 
-      const result = await session.run(cypher, { detectedHerbs });
-      const matched = result.records.map(r => r.toObject());
+      const result = await session.run(cypher, { detectedHerbs }, {timeout:5000});
+      const rows = result.records.map(r => r.toObject());
+      const matched = rows.filter(r=>!rows.some(other=>other.query_input===r.query_input && other.botanical_name!==r.botanical_name));
 
       const matchedInputs = new Set(matched.map(m => m.query_input.toLowerCase()));
       const unverified = detectedHerbs.filter(h => !matchedInputs.has(h.toLowerCase()));
@@ -94,10 +90,6 @@ Analyze the uploaded packaging, medicine bottle, or plant image and return JSON:
    * Primary entry point: Analyze image buffer or base64
    */
   async analyzeImage(imageBuffer, mimeType = 'image/jpeg') {
-    if (!this.apiKey) {
-      throw new Error('GEMINI_API_KEY is not configured in .env');
-    }
-
     const prompt = this.loadPrompt();
     const base64Data = imageBuffer.toString('base64');
 
@@ -110,9 +102,9 @@ Analyze the uploaded packaging, medicine bottle, or plant image and return JSON:
 
     let parsedJSON = null;
 
-    for (const mName of this.candidateModels) {
+    for (const mName of this.candidateModels || []) {
       try {
-        const m = this.genAI.getGenerativeModel({ model: mName });
+        const m = this.genAI.getGenerativeModel({ model: mName }, { timeout: 12000 });
         const result = await m.generateContent({
           contents: [
             {
@@ -125,71 +117,38 @@ Analyze the uploaded packaging, medicine bottle, or plant image and return JSON:
           ],
           generationConfig: {
             responseMimeType: 'application/json',
-            temperature: 0.1
+            maxOutputTokens: 2400, temperature: 0.1
           }
         });
 
         parsedJSON = JSON.parse(result.response.text());
-        if (parsedJSON) break;
-      } catch (err) {
-        console.warn(`  ⚠️ Vision model ${mName} error (${err.status || err.message}), trying next candidate...`);
-        continue;
+        if (typeof parsedJSON?.is_ayurvedic_or_herbal === 'boolean' &&
+            [parsedJSON.detected_herbs, parsedJSON.ingredients_detected].every(
+              names => Array.isArray(names) && names.length<=40 && names.every(name => typeof name === 'string' && name.length<=120 && name.trim())
+            )) break;
+        parsedJSON = null;
+      } catch {
+        parsedJSON = null;
       }
     }
+    if (!parsedJSON) return { status: 'ANALYSIS_UNAVAILABLE' };
 
-    // Heuristic fallback if all cloud API models encounter rate limiting
-    if (!parsedJSON) {
-      console.warn('  ⚠️ Cloud vision models temporarily saturated, using local heuristic OCR analyzer');
-      const textPreview = imageBuffer.toString('utf8', 0, Math.min(imageBuffer.length, 1024));
-      const isElectronics = textPreview.includes('USB') || textPreview.includes('BLUETOOTH') || textPreview.includes('HEADPHONE') || textPreview.includes('Battery');
-      
-      if (isElectronics) {
-        parsedJSON = {
-          product_name: 'Consumer Electronic Device',
-          is_ayurvedic_or_herbal: false,
-          detected_herbs: [],
-          ingredients_detected: [],
-          formulation_type: 'Unknown',
-          visual_confidence: 0.95,
-          extracted_ocr_text: 'Electronics component device detected.',
-          summary: 'The uploaded image contains consumer electronics, which is strictly out-of-domain for Ayurvedic clinical consultation.'
-        };
-      } else {
-        parsedJSON = {
-          product_name: 'Unrecognized Image or Label',
-          is_ayurvedic_or_herbal: false,
-          detected_herbs: [],
-          ingredients_detected: [],
-          formulation_type: 'Unknown',
-          visual_confidence: 0.0,
-          extracted_ocr_text: 'Vision models could not extract readable botanical text.',
-          summary: 'Cloud vision models could not extract readable botanical or ingredient text from this image. Please provide a clearer photo of the ingredients label or enter the herb name directly.'
-        };
-      }
-    }
-
-    // Step 4.1: Neo4j Graph Membership Verification Gate
-    let membership = { verified: [], unverified: [] };
-    if (parsedJSON.is_ayurvedic_or_herbal && parsedJSON.detected_herbs?.length > 0) {
-      membership = await this.verifyGraphMembership(parsedJSON.detected_herbs);
-    }
-
-    const isFullyVerified = membership.verified.length > 0;
+    const names = [...new Set([...parsedJSON.detected_herbs, ...parsedJSON.ingredients_detected])];
+    const herbal = parsedJSON.is_ayurvedic_or_herbal;
+    const membership = herbal ? await this.verifyGraphMembership(names) : { verified: [], unverified: [] };
+    const complete = membership.verified.length > 0 && !membership.unverified.length;
+    const status = !herbal ? 'OUT_OF_DOMAIN' : complete ? 'ASSESSED'
+      : membership.verified.length ? 'PARTIAL_ASSESSMENT' : 'INSUFFICIENT_DATA';
 
     return {
       ...parsedJSON,
+      status,
       graph_membership: {
-        status: isFullyVerified ? 'VERIFIED_CANONICAL_HERBS' : (parsedJSON.is_ayurvedic_or_herbal ? 'UNVERIFIED_IN_KNOWLEDGE_BASE' : 'OUT_OF_DOMAIN'),
+        status: complete ? 'VERIFIED_CANONICAL_HERBS' : status,
         verified_herbs: membership.verified,
         unverified_herbs: membership.unverified
       }
     };
-  }
-
-  async close() {
-    if (this.driver) {
-      await this.driver.close();
-    }
   }
 }
 

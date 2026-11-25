@@ -1,23 +1,10 @@
 const llm = require('./llm_client');
 const CypherQueryBuilder = require('./cypher_builder');
 const vectorStore = require('./vector_store');
-const neo4j = require('neo4j-driver');
-
-let driver = null;
-let cypherBuilder = null;
+const { getSharedDriver } = require('../lib/neo4j_config');
 
 function getCypherBuilder() {
-  if (!cypherBuilder) {
-    if (!process.env.NEO4J_URI || !process.env.NEO4J_PASSWORD) {
-      throw new Error('NEO4J_URI and NEO4J_PASSWORD are required for clinical retrieval.');
-    }
-    driver = neo4j.driver(
-      process.env.NEO4J_URI,
-      neo4j.auth.basic(process.env.NEO4J_USERNAME || 'neo4j', process.env.NEO4J_PASSWORD)
-    );
-    cypherBuilder = new CypherQueryBuilder(driver);
-  }
-  return cypherBuilder;
+  return new CypherQueryBuilder(getSharedDriver());
 }
 
 function traceCall(state, agent) {
@@ -274,11 +261,14 @@ async function judgeNode(state) {
   } else if (state.opponent_flags?.length) {
     finalVerdict = 'UNSAFE — DO NOT RECOMMEND';
   }
+  // A deterministic override also supersedes the model's explanation.
+  const guarded = finalVerdict !== result.final_verdict &&
+    /unsafe|caution|not in knowledge base/i.test(finalVerdict);
   const finalResponse = {
     ...result,
     final_verdict: finalVerdict,
-    summary_message: result.summary_message || 'The available graph and text evidence was reviewed for this profile.',
-    risk_explanation: result.risk_explanation || (state.opponent_flags?.length ? state.graph_facts?.collisionReasoning?.join(' ') : null),
+    summary_message: guarded ? 'The safety assessment does not support recommending this substance.' : result.summary_message || 'The available graph and text evidence was reviewed for this profile.',
+    risk_explanation: (guarded ? null : result.risk_explanation) || (state.opponent_flags?.length ? state.graph_facts?.collisionReasoning?.join(' ') : null),
     suggested_alternatives: state.canonical_entities?.query_intent === 'symptom_recommendation' && state.graph_facts?.safeCandidates?.length
       ? state.graph_facts.safeCandidates.slice(0, 3).map(herb => ({
         herb_name: herb.name,
@@ -319,14 +309,6 @@ async function outputFormatterNode(state) {
   return { final_response: finalResponse, confidence_score: confidence };
 }
 
-async function closeDriver() {
-  if (driver) {
-    await driver.close();
-    driver = null;
-    cypherBuilder = null;
-  }
-}
-
 module.exports = {
   entityExtractorNode,
   cypherQueryBuilderNode,
@@ -336,5 +318,4 @@ module.exports = {
   outputFormatterNode,
   calculateEmpiricalConfidence,
   graphSafetyAudit,
-  closeDriver
 };

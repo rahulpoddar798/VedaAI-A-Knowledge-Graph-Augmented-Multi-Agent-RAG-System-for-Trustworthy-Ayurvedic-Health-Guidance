@@ -9,7 +9,7 @@ const fs = require('fs');
 const path = require('path');
 const visionAgent = require('../engine/vision_agent');
 const { buildVedaAIPipeline } = require('../engine/pipeline');
-const { closeDriver } = require('../engine/agents');
+const { closeSharedDriver } = require('../lib/neo4j_config');
 
 let testsPassed = 0;
 let testsFailed = 0;
@@ -116,8 +116,7 @@ async function runPhase4Tests() {
     `Alternatives: ${res.suggested_alternatives?.map(a => a.herb_name).join(', ')}`
   );
 
-  await visionAgent.close();
-  await closeDriver();
+  await closeSharedDriver();
 
   console.log('\n═════════════════════════════════════════════════════════════════');
   console.log(`  📊 FINAL PHASE 4 SCORE: ${testsPassed} PASSED, ${testsFailed} FAILED`);
@@ -133,7 +132,7 @@ async function runPhase4Tests() {
 
 runPhase4Tests().catch(async (err) => {
   console.error('Fatal test error:', err);
-  await visionAgent.close();
-  await closeDriver();
+
+  await closeSharedDriver();
   process.exit(1);
 });

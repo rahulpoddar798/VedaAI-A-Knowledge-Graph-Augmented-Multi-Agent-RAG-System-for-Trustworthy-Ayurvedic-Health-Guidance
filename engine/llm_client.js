@@ -41,7 +41,7 @@ class LLMClient {
 
     for (const modelCandidate of this.candidateModels) {
       try {
-        const m = this.genAI.getGenerativeModel({ model: modelCandidate });
+        const m = this.genAI.getGenerativeModel({ model: modelCandidate }, { timeout: 10000 });
         const result = await m.generateContent({
           contents: [{ role: 'user', parts: [{ text: prompt }] }],
           generationConfig: {
@@ -72,11 +72,11 @@ class LLMClient {
 
     const fullPrompt = `${systemPrompt}\n\nINPUT DATA:\n${typeof userContent === 'string' ? userContent : JSON.stringify(userContent, null, 2)}\n\nRespond with strict JSON ONLY:`;
 
-    let lastError;
+    let failureKind = 'provider_unavailable';
     for (let attempt = 0; attempt < 3; attempt++) {
       for (const modelCandidate of this.candidateModels) {
         try {
-          const m = this.genAI.getGenerativeModel({ model: modelCandidate });
+          const m = this.genAI.getGenerativeModel({ model: modelCandidate }, { timeout: 10000 });
           const result = await m.generateContent({
             contents: [{ role: 'user', parts: [{ text: fullPrompt }] }],
             generationConfig: {
@@ -88,10 +88,15 @@ class LLMClient {
 
           const responseText = result.response.text();
           const parsed = JSON.parse(responseText);
+          if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new SyntaxError('Invalid structured result.');
           this.modelName = modelCandidate;
           return parsed;
         } catch (err) {
-          lastError = err;
+          if (err instanceof SyntaxError) {
+            failureKind = 'invalid_model_output';
+            continue;
+          }
+          failureKind = 'provider_unavailable';
           const message = String(err.message || '');
           const transient = message.includes('500') || message.includes('502') || message.includes('503') || message.includes('504') || message.includes('429') || message.includes('RESOURCE_EXHAUSTED');
           if (!transient) throw err;
@@ -100,7 +105,9 @@ class LLMClient {
       if (attempt < 2) await sleep(1500 * (attempt + 1));
     }
 
-    throw new Error(`Gemini JSON generation failed after bounded retries: ${lastError?.message || 'unknown provider error'}`);
+    throw Object.assign(new Error('Structured analysis temporarily unavailable.'), {
+      statusCode: 503, reason: failureKind
+    });
   }
 }
 
