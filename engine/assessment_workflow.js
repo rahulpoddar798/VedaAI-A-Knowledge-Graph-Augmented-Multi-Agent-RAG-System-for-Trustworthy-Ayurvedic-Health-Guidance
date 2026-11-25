@@ -161,7 +161,7 @@ function buildVedaAIPipeline(deps = {}) {
     safety: (s) => {
       const checks = applicableRules(s.user_profile, s.entries, deps.rules);
       const ruleRows = checks.map((hit) => {
-        const approved = deps.rules?.find(
+        const approved = (deps.rules || require('./rule_registry').registry).find(
           (r) => r.id === hit.ruleId && r.version === hit.version && r.validation === 'approved',
         );
         return {

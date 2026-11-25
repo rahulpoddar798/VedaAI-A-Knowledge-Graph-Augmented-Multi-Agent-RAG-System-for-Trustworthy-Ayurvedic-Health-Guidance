@@ -21,8 +21,7 @@ import {
   LoadingPanel,
   SampleNoticeBanner
 } from '../components/ui/StatePanels';
-import { clinicalProfile, appendClinicalProfile, mapConsultation } from '../data/consultation';
-import { SAMPLE_CONSULTATIONS } from '../data/mockData';
+import { clinicalProfile, appendClinicalProfile, followUpText, mapConsultation } from '../data/consultation';
 import type {
   ConsultationRecord,
   PatientProfile,
@@ -32,7 +31,6 @@ import type {
 interface ConsultationScreenProps {
   profile: PatientProfile;
   activeConsultation: ConsultationRecord | null;
-  backendOnline: boolean;
   onConsultationComplete: (record: ConsultationRecord) => void;
   onNavigate: (screen: ScreenId) => void;
 }
@@ -40,40 +38,33 @@ interface ConsultationScreenProps {
 interface FollowUpTurn {
   role: 'user' | 'assistant';
   content: string;
-  dosage?: string;
-  diet?: string;
-  precautions?: string;
 }
 
 const SUGGESTED_PROMPTS = [
   {
     label: 'Ginger in Grishma + Acid Reflux',
     query:
-      'Can I take dry Ginger (Shunthi) daily for sluggish digestion during summer while managing acid reflux?',
-    sampleIndex: 0
+      'Can I take dry Ginger (Shunthi) daily for sluggish digestion during summer while managing acid reflux?'
   },
   {
     label: 'Amalaki for winter immunity',
-    query: 'Can I take Indian Gooseberry (Amalaki) daily for antioxidant immunity in winter?',
-    sampleIndex: 1
+    query: 'Can I take Indian Gooseberry (Amalaki) daily for antioxidant immunity in winter?'
   },
   {
     label: 'Ashwagandha in Spring (Kapha)',
     query:
-      'Is Ashwagandha suitable for fatigue during spring if I have Kapha dominance and weight concerns?',
-    sampleIndex: 2
+      'Is Ashwagandha suitable for fatigue during spring if I have Kapha dominance and weight concerns?'
   }
 ];
 
 export const ConsultationScreen: React.FC<ConsultationScreenProps> = ({
   profile,
   activeConsultation,
-  backendOnline,
   onConsultationComplete,
   onNavigate
 }) => {
   const [query, setQuery] = useState(
-    activeConsultation?.fullQuery || SUGGESTED_PROMPTS[0].query
+    activeConsultation?.fullQuery || ''
   );
   const [attachedFile, setAttachedFile] = useState<File | null>(null);
   const [attachedPreview, setAttachedPreview] = useState<string | null>(null);
@@ -149,7 +140,7 @@ export const ConsultationScreen: React.FC<ConsultationScreenProps> = ({
     try {
       const res = await fetch('/api/follow-up', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + activeConsultation.followUpToken },
         body: JSON.stringify({
           followUpQuery: text,
           consultationId: activeConsultation.id
@@ -157,16 +148,8 @@ export const ConsultationScreen: React.FC<ConsultationScreenProps> = ({
       });
       const json = await res.json();
       if (res.ok && json.success && json.data) {
-        setFollowUps(prev => [
-          ...prev,
-          {
-            role: 'assistant',
-            content: json.data.reply,
-            dosage: json.data.dosage_and_anupana,
-            diet: json.data.pathya_apathya,
-            precautions: json.data.precautions
-          }
-        ]);
+        const content = followUpText(json.data, activeConsultation);
+        setFollowUps(prev => [...prev, { role: 'assistant', content }]);
       } else {
         setFollowUps(prev => [
           ...prev,
@@ -176,7 +159,7 @@ export const ConsultationScreen: React.FC<ConsultationScreenProps> = ({
     } catch {
       setFollowUps(prev => [
         ...prev,
-        { role: 'assistant', content: 'Network error while requesting follow-up guidance.' }
+        { role: 'assistant', content: 'The follow-up service could not provide a valid response.' }
       ]);
     } finally {
       setFollowUpLoading(false);
@@ -184,7 +167,7 @@ export const ConsultationScreen: React.FC<ConsultationScreenProps> = ({
   };
 
   const handleFeedback = async (type: 'accurate' | 'discrepancy') => {
-    if (!backendOnline || !activeConsultation) return;
+    if (!activeConsultation || activeConsultation.isSampleData) return;
     try {
       const res = await fetch('/api/feedback', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -220,7 +203,7 @@ export const ConsultationScreen: React.FC<ConsultationScreenProps> = ({
                 className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-white border border-[#DDE4DE] text-xs font-medium text-[#26332D] hover:bg-[#E8EFE8]/50 cursor-pointer"
               >
                 <Cpu className="w-3.5 h-3.5 text-[#173D32]" />
-                <span>5-Agent Trace</span>
+                <span>Execution stages</span>
               </button>
             </>
           )
@@ -344,7 +327,6 @@ export const ConsultationScreen: React.FC<ConsultationScreenProps> = ({
                 onClick={() => {
                   setQuery(p.query);
                   setErrorMsg(null);
-                  onConsultationComplete(SAMPLE_CONSULTATIONS[p.sampleIndex]);
                 }}
                 className="px-2.5 py-1 rounded-full border border-[#DDE4DE] bg-[#F7F5EE]/70 text-xs text-[#26332D] hover:bg-[#E8EFE8] transition cursor-pointer"
               >
@@ -354,6 +336,12 @@ export const ConsultationScreen: React.FC<ConsultationScreenProps> = ({
           </div>
         </form>
       </section>
+
+      <details className="rounded-xl border p-4">
+        <summary>View a demonstration consultation</summary>
+        <p>Example question: Can I take ginger during summer?</p>
+        <p>Demonstration only. This example has no backend assessment or evidence ledger.</p>
+      </details>
 
       {errorMsg && (
         <ErrorPanel
@@ -483,7 +471,7 @@ export const ConsultationScreen: React.FC<ConsultationScreenProps> = ({
                   className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-white border border-[#DDE4DE] text-xs font-medium text-[#26332D] hover:bg-[#F7F5EE] transition cursor-pointer"
                 >
                   <Cpu className="w-3.5 h-3.5 text-[#173D32]" />
-                  <span>Inspect 5-Agent Debate</span>
+                  <span>Inspect execution stages</span>
                 </button>
               </div>
 
@@ -517,13 +505,13 @@ export const ConsultationScreen: React.FC<ConsultationScreenProps> = ({
             </div>
           </section>
 
-          {/* Follow-Up Q&A Thread */}
-          <section className="bg-white border border-[#DDE4DE] rounded-xl p-5 space-y-4">
+          {/* Follow-up is available for assessed records. */}
+          {activeConsultation.followUpToken && <section className="bg-white border border-[#DDE4DE] rounded-xl p-5 space-y-4">
             <div className="flex items-center gap-2 pb-3 border-b border-[#DDE4DE]">
               <MessageSquare className="w-4 h-4 text-[#173D32]" />
               <div>
                 <h3 className="text-sm font-semibold text-[#26332D]">
-                  Follow-Up Clinical Clarification (Anupana, Timing &amp; Diet)
+                  Consultation follow-up
                 </h3>
                 <p className="text-xs text-[#758078]">
                   Ask a scoped follow-up question anchored to this assessment.
@@ -546,22 +534,6 @@ export const ConsultationScreen: React.FC<ConsultationScreenProps> = ({
                       {turn.role === 'user' ? 'Your Follow-Up' : 'VedaAI Follow-Up Guidance'}
                     </p>
                     <p className="text-[#26332D] leading-relaxed">{turn.content}</p>
-                    {turn.dosage && (
-                      <p className="text-[11px] text-[#758078]">
-                        <strong className="text-[#26332D]">Anupana / Dosing Note:</strong>{' '}
-                        {turn.dosage}
-                      </p>
-                    )}
-                    {turn.diet && (
-                      <p className="text-[11px] text-[#758078]">
-                        <strong className="text-[#26332D]">Pathya / Apathya:</strong> {turn.diet}
-                      </p>
-                    )}
-                    {turn.precautions && (
-                      <p className="text-[11px] text-[#945F14]">
-                        <strong>Precautions:</strong> {turn.precautions}
-                      </p>
-                    )}
                   </div>
                 ))}
               </div>
@@ -572,7 +544,7 @@ export const ConsultationScreen: React.FC<ConsultationScreenProps> = ({
                 type="text"
                 value={followUpInput}
                 onChange={e => setFollowUpInput(e.target.value)}
-                placeholder="Ask about carrier vehicle (Anupana), dietary Pathya, or timing..."
+                placeholder="Ask about the evidence or restrictions in this assessment..."
                 className="flex-1 h-10 px-3.5 rounded-lg border border-[#DDE4DE] bg-[#F7F5EE]/50 text-xs text-[#26332D] focus:bg-white"
               />
               <button
@@ -584,7 +556,7 @@ export const ConsultationScreen: React.FC<ConsultationScreenProps> = ({
                 <span>{followUpLoading ? 'Sending...' : 'Ask'}</span>
               </button>
             </form>
-          </section>
+          </section>}
         </div>
       )}
     </div>

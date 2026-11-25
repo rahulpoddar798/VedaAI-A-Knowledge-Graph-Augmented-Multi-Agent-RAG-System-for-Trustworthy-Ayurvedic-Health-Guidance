@@ -164,7 +164,7 @@ export const AppShell: React.FC<AppShellProps> = ({
             ) : (
               <WifiOff className="w-3.5 h-3.5 text-[#758078]" />
             )}
-            <span>{backendOnline ? 'Neo4j Aura Online' : 'Sample Prototype Mode'}</span>
+            <span>{backendOnline ? 'Neo4j Aura Online' : 'Catalog unavailable'}</span>
           </span>
           <span
             className={`w-2 h-2 rounded-full ${
@@ -208,7 +208,7 @@ export const AppShell: React.FC<AppShellProps> = ({
               className="flex-1 inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-md border border-[#DDE4DE] text-[11px] font-medium text-[#26332D] hover:bg-[#F7F5EE] transition cursor-pointer"
             >
               <LogOut className="w-3 h-3 text-[#758078]" />
-              <span>Sign In</span>
+              <span>Demo views</span>
             </button>
           </div>
         </div>

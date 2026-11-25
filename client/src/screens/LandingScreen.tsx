@@ -41,7 +41,7 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({ onNavigate }) => {
               onClick={() => onNavigate('auth')}
               className="px-3.5 py-2 rounded-lg border border-[#DDE4DE] bg-white text-xs font-medium text-[#26332D] hover:bg-[#E8EFE8]/50 transition cursor-pointer"
             >
-              Clinician / Patient Sign In
+              Explore demo views
             </button>
             <button
               type="button"
@@ -68,7 +68,7 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({ onNavigate }) => {
           </h1>
 
           <p className="text-base text-[#758078] leading-relaxed max-w-2xl">
-            VedaAI pairs classical Ayurvedic pharmacology (IMPPAT 2.0 &amp; Charaka Samhita) with a Neo4j knowledge graph, hybrid vector retrieval, and an adversarial five-agent architecture so safety contraindications are never hidden behind fluent prose.
+            VedaAI retrieves structured records and available documents, tracks missing evidence, and applies a versioned verdict policy.
           </p>
 
           <div className="flex flex-wrap items-center gap-3 pt-1">
@@ -97,17 +97,17 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({ onNavigate }) => {
               Safety-First Reasoning Pipeline
             </span>
             <span className="text-[11px] font-medium px-2 py-0.5 rounded bg-[#E8EFE8] text-[#173D32]">
-              5 Stages
+              LangGraph
             </span>
           </div>
 
           <div className="space-y-3">
             {[
-              ['1. Entity Extractor', 'Normalizes Sanskrit, botanical, seasonal & morbidity entities.'],
-              ['2. Retrieval Planner', 'Executes Neo4j Cypher traversals + 3072-d vector search.'],
-              ['3. Proponent Agent', 'Synthesizes potential therapeutic rationale from classical texts.'],
-              ['4. Opponent Validator', 'Audits contraindications, dosha clashes, and missing data.'],
-              ['5. Judge Arbitrator', 'Enforces safety-first verdicts with explicit provenance.']
+              ['Retrieval', 'Search Neo4j, IMPPAT and available source documents.'],
+              ['Evidence ledger', 'Preserve source and verification details.'],
+              ['Evidence selection', 'Proponent and Opponent select retrieved records.'],
+              ['Coverage', 'Record missing information and unresolved findings.'],
+              ['Verdict', 'Application code applies versioned rules.']
             ].map(([title, desc]) => (
               <div key={title} className="flex items-start gap-2.5">
                 <CheckCircle2 className="w-4 h-4 text-[#247A58] shrink-0 mt-0.5" />
@@ -132,7 +132,7 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({ onNavigate }) => {
           {
             Icon: GitBranch,
             title: 'Explicit Knowledge Graph Provenance',
-            desc: 'Every safety flag traces directly to Neo4j relationships across herbs, doshas, seasons (Ritucharya), and chronic conditions.'
+            desc: 'Catalog relationships show their available attribution and verification status.'
           },
           {
             Icon: ScanLine,
@@ -141,8 +141,8 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({ onNavigate }) => {
           },
           {
             Icon: Cpu,
-            title: 'Adversarial Multi-Agent Transparency',
-            desc: 'Distinguishes generated agent commentary from independently verified database facts and reports missing evidence clearly.'
+            title: 'Consultation execution',
+            desc: 'View the workflow stages, evidence selections, coverage gaps and deterministic verdict.'
           }
         ].map(item => {
           const Icon = item.Icon;

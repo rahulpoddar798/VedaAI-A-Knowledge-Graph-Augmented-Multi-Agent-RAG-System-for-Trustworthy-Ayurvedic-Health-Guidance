@@ -216,6 +216,10 @@ function track(profile, entries, findings, stages, unresolved = [], checks = [])
       [],
       unresolved,
     );
+  const passages = entries.filter(e => ['classical', 'research'].includes(e.kind) && e.verification === 'source_traceable');
+  add('primary_source_passages', passages.length ? 'assessed' : 'insufficient_evidence',
+    passages.length ? 'Attributable source passages retrieved.' : 'No attributable primary-source passage was retrieved.',
+    passages.map(e => e.id), passages.length ? [] : ['Primary-source passages']);
   const cited = entries.filter(
     (e) =>
       e.verification === 'source_traceable' && ['classical', 'research', 'association'].includes(e.kind),

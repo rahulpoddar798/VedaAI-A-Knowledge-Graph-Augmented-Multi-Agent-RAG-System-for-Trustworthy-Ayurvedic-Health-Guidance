@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Search, ArrowUpRight, ClipboardCheck, Shield } from 'lucide-react';
 import { PageHeader } from '../components/ui/PageHeader';
 import { SafetyBadge } from '../components/ui/SafetyBadge';
-import { EmptyPanel, SampleNoticeBanner } from '../components/ui/StatePanels';
+import { EmptyPanel } from '../components/ui/StatePanels';
 import type { ConsultationRecord, SafetyStatus } from '../types/veda';
 
 interface ConsultationHistoryScreenProps {
@@ -33,12 +33,11 @@ export const ConsultationHistoryScreen: React.FC<ConsultationHistoryScreenProps>
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Clinical Record Archive"
+        eyebrow="Current browser session"
         title="Consultation History"
-        description="Search and reopen past clinical consultations or AI assessments. List previews omit sensitive personal health notes."
+        description="Reopen consultations from this session. Refreshing or closing this page clears this history."
       />
 
-      <SampleNoticeBanner text="Includes demonstration sample consultations alongside any consultations executed during this session." />
 
       {/* Search & Status Filters */}
       <div className="bg-white border border-[#DDE4DE] rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -57,9 +56,9 @@ export const ConsultationHistoryScreen: React.FC<ConsultationHistoryScreenProps>
           {(
             [
               ['all', 'All'],
-              ['flagged', 'Flagged'],
-              ['caution', 'Caution'],
-              ['verified', 'Verified']
+              ['blocked', 'Blocked'], ['restricted', 'Restricted'],
+              ['expert_review_required', 'Expert review'], ['insufficient_evidence', 'Insufficient evidence'],
+              ['out_of_domain', 'Out of domain']
             ] as const
           ).map(([key, label]) => (
             <button
@@ -80,8 +79,8 @@ export const ConsultationHistoryScreen: React.FC<ConsultationHistoryScreenProps>
 
       {filtered.length === 0 ? (
         <EmptyPanel
-          title="No Matching Consultations"
-          description="No archived consultations match your current search or safety status filter."
+          title={consultations.length ? "No matching consultations" : "No consultations in this session"}
+          description={consultations.length ? "Try changing the search or status filter." : "Completed consultations appear here until you refresh or close the page."}
         />
       ) : (
         <section className="bg-white border border-[#DDE4DE] rounded-xl overflow-hidden">

@@ -1,5 +1,6 @@
 require('dotenv').config();
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { CatalogUnavailableError } = require('../lib/security');
 const fs = require('fs');
 const path = require('path');
 const { getSharedDriver } = require('../lib/neo4j_config');
@@ -135,7 +136,11 @@ Analyze the uploaded packaging, medicine bottle, or plant image and return JSON:
 
     const names = [...new Set([...parsedJSON.detected_herbs, ...parsedJSON.ingredients_detected])];
     const herbal = parsedJSON.is_ayurvedic_or_herbal;
-    const membership = herbal ? await this.verifyGraphMembership(names) : { verified: [], unverified: [] };
+    let membership = { verified: [], unverified: [] };
+    if (herbal) {
+      try { membership = await this.verifyGraphMembership(names); }
+      catch (cause) { throw new CatalogUnavailableError(cause); }
+    }
     const complete = membership.verified.length > 0 && !membership.unverified.length;
     const status = !herbal ? 'OUT_OF_DOMAIN' : complete ? 'ASSESSED'
       : membership.verified.length ? 'PARTIAL_ASSESSMENT' : 'INSUFFICIENT_DATA';

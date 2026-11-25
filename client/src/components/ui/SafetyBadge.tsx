@@ -25,6 +25,8 @@ const STATUS_CONFIG: Record<
     Icon: React.ComponentType<{ className?: string }>;
   }
 > = {
+  restricted: { label: 'Restricted', classes: 'bg-amber-50 text-amber-900', Icon: ShieldAlert },
+  expert_review_required: { label: 'Expert review required', classes: 'bg-amber-50 text-amber-900', Icon: HelpCircle },
   verified: {
     label: 'Verified',
     classes: 'bg-[#E8F5EE] text-[#1D6347] border-[#B8DEC9]',

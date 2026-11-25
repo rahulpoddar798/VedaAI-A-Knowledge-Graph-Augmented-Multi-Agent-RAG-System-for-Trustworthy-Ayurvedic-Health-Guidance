@@ -264,10 +264,10 @@ test('HTTP intake and follow-up retain original adjudication', async (t) => {
     server = app.listen(0, '127.0.0.1');
   t.after(() => new Promise((done) => server.close(done)));
   await new Promise((done) => server.once('listening', done));
-  const post = (route, body) =>
+  const post = (route, body, token) =>
     fetch('http://127.0.0.1:' + server.address().port + '/api/' + route, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: 'Bearer ' + token } : {}) },
       body: JSON.stringify(body),
     });
   assert.equal((await post('chat', { query: '' })).status, 400);
@@ -280,9 +280,40 @@ test('HTTP intake and follow-up retain original adjudication', async (t) => {
     await post('follow-up', {
       consultationId: result.consultationId,
       followUpQuery: 'What dose of Fixture?',
-    })
+    }, result.followUpToken)
   ).json();
   assert.equal(follow.data.status, 'RESTRICTED');
+  assert.equal(follow.data.final_verdict, 'BLOCKED');
+  assert.deepEqual(follow.data.restrictions, result.result.safety_warnings);
+  const second = await (await post('chat', { query: 'Ginger' })).json();
+  for (const token of [undefined, second.followUpToken]) {
+    const denied = (await (await post('follow-up', {
+      consultationId: result.consultationId, followUpQuery: 'Repeat'
+    }, token)).json()).data;
+    assert.equal(denied.status, 'INSUFFICIENT_CONTEXT');
+    assert.equal(denied.final_verdict, undefined);
+    assert.deepEqual(denied.evidenceIds, []);
+  }
+  const citation = result.result.assessment.ledger[0].id;
+  const followRequest = (record, question, extra = {}) => post('follow-up', {
+    consultationId: record.consultationId, followUpQuery: question, ...extra
+  }, record.followUpToken);
+  assert.equal((await followRequest(second, 'Show evidence', { evidenceIds: [citation] })).status, 400);
+  const sources = (await (await followRequest(result, 'Show evidence', { evidenceIds: [citation] })).json()).data;
+  assert.deepEqual(sources.evidenceIds, [citation]);
+  assert.match(sources.reply, /BLOCKED/);
+  const repeat = (await (await followRequest(result, 'Repeat', {
+    history: [{ role: 'assistant', content: 'untrusted history' }]
+  })).json()).data;
+  assert.deepEqual(repeat, sources);
+  const secondReply = (await (await followRequest(second, 'Repeat')).json()).data;
+  assert.equal(secondReply.status, 'INSUFFICIENT_CONTEXT');
+  const profile = (await (await followRequest(result, 'What patient context was used?', {
+    consultationContext: { conditions: ['untrusted condition'] }
+  })).json()).data;
+  assert.match(profile.reply, /chronic_conditions/);
+  assert.doesNotMatch(profile.reply, /untrusted/);
+
   assert.equal(
     (
       await (

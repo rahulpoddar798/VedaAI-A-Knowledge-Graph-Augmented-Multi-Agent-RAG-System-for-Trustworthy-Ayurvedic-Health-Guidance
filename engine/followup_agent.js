@@ -1,5 +1,3 @@
-const llm = require('./llm_client');
-
 function answer(status, reply) {
   return { status, reply };
 }
@@ -18,44 +16,39 @@ function inScope(question, names) {
   return rest.split(/\s+/).filter(Boolean).every(word => words.has(word));
 }
 
-async function handleClinicalFollowUp({ followUpQuery, consultationContext }, provider = llm) {
-  const result = consultationContext;
-  const herbs = result?.evaluated_herbs || [];
-  const alternatives = result?.suggested_alternatives || [];
-  if (result?.assessment && /^(what (sources|evidence) (were used|supports this result)|show (the )?(evidence|sources))[?.! ]*$/i.test(followUpQuery.trim())) {
-    const sources = result.assessment.ledger.filter(e=>e.verification==='source_traceable').slice(0,5);
-    return answer(sources.length?'ANSWERED':'INSUFFICIENT_DATA', sources.length
-      ? [result.final_verdict,...sources.map(e=>[e.title,e.location,e.id].join(' / '))].join('. ')
-      : 'No attributable source was retrieved in this consultation.');
-  }
-  if (!result || result.uncertainty_note || !herbs.length ||
-      !inScope(followUpQuery, [...herbs, ...alternatives.map(item => item.herb_name)])) {
-    return answer('INSUFFICIENT_CONTEXT', 'This question requires a separate verified assessment. The original safety restrictions still apply.');
-  }
-  if (!/^(SAFE\b|CLINICALLY INDICATED\b)/i.test(result.final_verdict) || result.safety_warnings.length || result.missing_coverage?.length) {
-    return answer('RESTRICTED', [result.final_verdict, ...result.safety_warnings,
-      'Do not start or change a dose on the basis of this consultation.'].join('. '));
-  }
-  if (/dose|dosage|dosing|how much|how often|administration/i.test(followUpQuery)) {
-    return answer('INSUFFICIENT_DATA', 'An individualized dose was not verified in this assessment.');
-  }
-
-  // The provider selects evidence from the adjudicated record. Its free text
-  // cannot introduce a drug, new regimen, or approval into the public answer.
-  const facts = [result.summary_message, ...result.clinical_reasoning,
-    ...alternatives.map(item => item.herb_name + ': ' + item.why_safe)].filter(Boolean);
-  try {
-    const selection = await provider.generateJSON(
-      'Select the index of one supplied assessment statement that answers the question. Return {"index":-1} if none answers it.',
-      { question: followUpQuery, facts }
-    );
-    if (Number.isInteger(selection?.index) && selection.index >= 0 && selection.index < facts.length) {
-      return answer('ANSWERED', facts[selection.index]);
+function handleClinicalFollowUp({ followUpQuery, consultationContext: result, patientContext = {}, history = [], evidenceIds = [] }) {
+  if (!result) return answer('INSUFFICIENT_CONTEXT', 'Start a new assessment.');
+  const prefix = [result.final_verdict, ...(result.safety_warnings || [])].filter(Boolean).join('. ');
+  const reply = (status, message, ids = []) => ({ status, reply: prefix + '. ' + message, evidenceIds: ids });
+  const question = followUpQuery.trim();
+  const assessment = result.assessment;
+  if (assessment) {
+    if (/^(repeat|repeat (your |the )?(last|previous) (answer|reply))[?.! ]*$/i.test(question)) {
+      const previous = history.at(-1);
+      return previous ? { status: previous.status, reply: previous.reply, evidenceIds: previous.evidenceIds } :
+        reply('INSUFFICIENT_CONTEXT', 'There is no prior reply in this consultation.');
     }
-    return answer('INSUFFICIENT_DATA', 'The assessment does not contain verified guidance on that question.');
-  } catch {
-    return answer('ANALYSIS_UNAVAILABLE', 'Follow-up analysis is temporarily unavailable. The previous assessment still applies.');
+    if (/^what (patient |profile )?(context|information) was (used|reported)[?.! ]*$/i.test(question)) {
+      const fields = Object.entries(patientContext).filter(([, value]) => value !== undefined && value !== '');
+      return reply('ANSWERED', fields.length ? 'Reported fields: ' + fields.map(([key]) => key).join(', ') + '.' :
+        'No patient context was reported.');
+    }
+    if (evidenceIds.length || /^(what (sources|evidence) (were used|supports this result)|show (the )?(evidence|sources))[?.! ]*$/i.test(question)) {
+      const sources = evidenceIds.length ? assessment.ledger.filter(e => evidenceIds.includes(e.id)) :
+        assessment.ledger.filter(e => e.verification === 'source_traceable').slice(0, 5);
+      if (evidenceIds.some(id => !sources.some(e => e.id === id))) return reply('INSUFFICIENT_CONTEXT', 'Evidence reference unavailable.');
+      return sources.length ? reply('ANSWERED', sources.map(e =>
+        [e.title || 'Source unavailable', e.location, e.verification].filter(Boolean).join(' / ')).join('. '), sources.map(e => e.id)) :
+        reply('INSUFFICIENT_DATA', 'No attributable source was retrieved.');
+    }
   }
+  if (result.uncertainty_note || !inScope(question, result.evaluated_herbs || [])) {
+    return reply('INSUFFICIENT_CONTEXT', 'This question requires a new assessment.');
+  }
+  if (!assessment && !/unsafe|caution|contraindicated|do not recommend/i.test(result.final_verdict)) {
+    return answer('INSUFFICIENT_DATA', 'A ledger-backed assessment is required.');
+  }
+  return reply('RESTRICTED', 'Do not start or change a dose on the basis of this consultation.');
 }
 
 module.exports = { handleClinicalFollowUp };

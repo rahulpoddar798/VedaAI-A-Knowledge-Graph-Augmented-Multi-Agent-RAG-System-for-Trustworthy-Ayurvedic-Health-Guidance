@@ -9,6 +9,7 @@
  * from cypher_builder, and the LLM retry logic from llm_client.
  */
 
+const { CatalogUnavailableError } = require('../lib/security');
 const fs = require('fs');
 const path = require('path');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
@@ -300,16 +301,13 @@ class LabelAuditAgent {
 
     // Step 2: Verify against catalog
     console.log('  🔍 Step 2: Verifying against Neo4j herb catalog...');
-    const verification = await this.verifyIngredients(extraction.ingredients);
-    console.log(`  ✅ Verified: ${verification.verified.length} | ❓ Unverified: ${verification.unverified.length} | ⚠️ Uncertain: ${verification.uncertain.length}`);
-
-    // Step 3: Safety audit on verified herbs
-    console.log('  🛡️ Step 3: Running graph safety audit on verified ingredients...');
-    const audited = await this.runSafetyAudit(verification.verified, {
-      season: profile.season || 'Hemanta',
-      prakriti: profile.prakriti || 'Tridoshic',
-      conditions: profile.conditions || []
-    });
+    let verification, audited;
+    try {
+      verification = await this.verifyIngredients(extraction.ingredients);
+      audited = await this.runSafetyAudit(verification.verified, profile);
+    } catch (cause) {
+      throw new CatalogUnavailableError(cause);
+    }
 
     const flaggedCount = audited.filter(a => a.safety.verdict === 'FLAGGED').length;
     console.log(`  🏁 Audit complete. ${flaggedCount} ingredient(s) flagged.`);
