@@ -115,6 +115,22 @@ test('assessment and transparency render only evidence belonging to the selected
   const stages = renderToStaticMarkup(createElement(AgentTransparencyScreen, { consultation: live }));
   assert.match(stages, /documents.{0,40}unavailable/);
   assert.doesNotMatch(stages, /Judge|latency/);
+  assert.doesNotMatch(stages, /\b(proponent|opponent|langgraph)\b/i);
+  assert.match(stages, /Supporting evidence specialist/);
+  assert.match(stages, /Critical safety review specialist/);
+  assert.match(stages, /Source unavailable/);
+  const emptyStages = renderToStaticMarkup(createElement(AgentTransparencyScreen, { consultation: null }));
+  assert.match(emptyStages, /No consultation selected/);
+  const loadingStages = renderToStaticMarkup(createElement(AgentTransparencyScreen, { consultation: null, isLoading: true }));
+  assert.match(loadingStages, /Loading consultation workflow trace/i);
+  const errorStages = renderToStaticMarkup(createElement(AgentTransparencyScreen, { consultation: null, error: 'Trace fetch failed.' }));
+  assert.match(errorStages, /Process trace unavailable/);
+  assert.match(errorStages, /Trace fetch failed\./);
+  const { AdminPortalScreen } = await server.ssrLoadModule('/src/screens/AdminPortalScreen.tsx');
+  const adminView = renderToStaticMarkup(createElement(AdminPortalScreen, { backendOnline: false }));
+  assert.match(adminView, /Demonstration Review Queue/i);
+  assert.match(adminView, /Release History \(Demo\)/i);
+  assert.doesNotMatch(adminView, /changes safety review status in the audit log/i);
   for (const mutate of [
     p => p.result.assessment.findings[0].evidenceIds.push('foreign'),
     p => p.result.assessment.verdict.coverage[0].evidenceIds.push('foreign'),

@@ -33,24 +33,29 @@ export const AdminPortalScreen: React.FC<AdminPortalScreenProps> = ({
       {/* Visually Distinct Governance Header Banner (Separated from Patient Workflows) */}
       <header className="rounded-xl bg-[#164B45] text-white p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-4 border border-[#173D32]">
         <div className="space-y-1.5">
-          <div className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-[#E8EFE8]">
-            <Shield className="w-3.5 h-3.5" />
-            <span>Governance &amp; Ontology Administration</span>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-[#E8EFE8]">
+              <Shield className="w-3.5 h-3.5" />
+              <span>Governance &amp; Ontology Administration</span>
+            </div>
+            <span className="px-2 py-0.5 rounded-full bg-white/15 border border-white/25 text-[10px] font-semibold uppercase tracking-wider text-[#F7F5EE]">
+              Demonstration Only
+            </span>
           </div>
           <h1 className="font-editorial text-2xl sm:text-[28px] font-semibold">
             Admin &amp; Expert Review Portal
           </h1>
           <p className="text-xs sm:text-sm text-[#DCE6DE] max-w-2xl">
-            Demonstration review queue and release history. Decisions here apply only to this browser session.
+            Static demonstration queue and sample release history. Actions adjust temporary browser state only and do not persist to a backend or audit log.
           </p>
         </div>
 
         <div className="flex flex-wrap gap-2">
           {(
             [
-              ['queue', 'Review Queue'],
-              ['versioning', 'Ontology Versions'],
-              ['monitoring', 'System Monitoring']
+              ['queue', 'Review Queue (Demo)'],
+              ['versioning', 'Release History (Demo)'],
+              ['monitoring', 'System Status']
             ] as const
           ).map(([id, label]) => (
             <button
@@ -71,6 +76,22 @@ export const AdminPortalScreen: React.FC<AdminPortalScreenProps> = ({
 
       {activeTab === 'queue' && (
         <section className="space-y-4">
+          <div
+            role="status"
+            className="rounded-xl border border-[#EAD0A1] bg-[#FDF4E6] px-4 py-3 flex items-start gap-3 text-xs text-[#7B5212]"
+          >
+            <AlertTriangle className="w-4 h-4 text-[#B7791F] shrink-0 mt-0.5" />
+            <div className="space-y-0.5">
+              <p className="font-semibold text-[#5E3E0B]">
+                Demonstration Review Queue — Local Session State Only
+              </p>
+              <p className="leading-relaxed">
+                Items below are static sample proposals. Clicking <strong>Approve Change</strong> or{' '}
+                <strong>Request Revision</strong> changes only temporary React interface state in this browser tab — no real clinical governance decisions, Neo4j edits, rule changes, or persistent audit-log entries are written.
+              </p>
+            </div>
+          </div>
+
           {items.map(item => (
             <article
               key={item.id}
@@ -82,13 +103,16 @@ export const AdminPortalScreen: React.FC<AdminPortalScreenProps> = ({
                     <span className="px-2 py-0.5 rounded bg-[#E8EFE8] text-[#173D32] text-[11px] font-medium">
                       {item.category}
                     </span>
+                    <span className="px-2 py-0.5 rounded bg-[#F7F5EE] border border-[#DDE4DE] text-[#758078] text-[10px] font-medium uppercase tracking-wider">
+                      Sample Record
+                    </span>
                     <span className="text-xs text-[#758078] tabular-nums">
                       {item.id} · {item.version}
                     </span>
                   </div>
                   <h2 className="text-base font-semibold text-[#26332D]">{item.title}</h2>
                   <p className="text-xs text-[#758078]">
-                    Submitted by {item.submittedBy} · {item.submittedAt}
+                    Sample author: {item.submittedBy} · {item.submittedAt}
                   </p>
                 </div>
 
@@ -113,21 +137,26 @@ export const AdminPortalScreen: React.FC<AdminPortalScreenProps> = ({
                 </pre>
               )}
 
-              <div className="pt-2 border-t border-[#DDE4DE] flex flex-wrap items-center justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setPendingAction({ item, nextStatus: 'Requires Revision' })}
-                  className="px-3 py-1.5 rounded-lg border border-[#E7BABA] bg-white text-xs font-medium text-[#9A2E2E] hover:bg-[#FBEAEA] cursor-pointer"
-                >
-                  Request Revision
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPendingAction({ item, nextStatus: 'Approved' })}
-                  className="px-3.5 py-1.5 rounded-lg bg-[#173D32] text-white text-xs font-medium hover:bg-[#164B45] cursor-pointer"
-                >
-                  Approve Change
-                </button>
+              <div className="pt-2 border-t border-[#DDE4DE] flex flex-wrap items-center justify-between gap-2">
+                <span className="text-[11px] text-[#758078]">
+                  Updates local UI preview only (not saved to a backend)
+                </span>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setPendingAction({ item, nextStatus: 'Requires Revision' })}
+                    className="px-3 py-1.5 rounded-lg border border-[#E7BABA] bg-white text-xs font-medium text-[#9A2E2E] hover:bg-[#FBEAEA] cursor-pointer"
+                  >
+                    Request Revision
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPendingAction({ item, nextStatus: 'Approved' })}
+                    className="px-3.5 py-1.5 rounded-lg bg-[#173D32] text-white text-xs font-medium hover:bg-[#164B45] cursor-pointer"
+                  >
+                    Approve Change
+                  </button>
+                </div>
               </div>
             </article>
           ))}
@@ -136,17 +165,25 @@ export const AdminPortalScreen: React.FC<AdminPortalScreenProps> = ({
 
       {activeTab === 'versioning' && (
         <section className="bg-white border border-[#DDE4DE] rounded-xl p-6 space-y-4">
-          <div className="flex items-center gap-2 pb-3 border-b border-[#DDE4DE]">
-            <FileCheck2 className="w-4 h-4 text-[#173D32]" />
-            <h2 className="text-sm font-semibold text-[#26332D]">
-              Ontology &amp; Prompt Releases
-            </h2>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[#DDE4DE]">
+            <div className="flex items-center gap-2">
+              <FileCheck2 className="w-4 h-4 text-[#173D32]" />
+              <h2 className="text-sm font-semibold text-[#26332D]">
+                Sample Release History (Demonstration Information)
+              </h2>
+            </div>
+            <span className="self-start sm:self-auto px-2 py-0.5 rounded bg-[#FDF4E6] border border-[#EAD0A1] text-[#945F14] text-[10px] font-semibold uppercase tracking-wider">
+              Static Sample Data
+            </span>
           </div>
+          <p className="text-xs text-[#5B6660] bg-[#F7F5EE] border border-[#DDE4DE] rounded-lg px-3.5 py-2.5 leading-relaxed">
+            Illustrative release timeline for interface demonstration only. Dates, release identifiers, and changelog descriptions below are static sample entries, not live deployment or governance telemetry.
+          </p>
           <div className="divide-y divide-[#DDE4DE] text-xs">
             {[
-              ['v2.4.0 (Active)', '2026-11-18', '25 Herbs · 179 Relationships · Label Audit v1 prompt'],
-              ['v2.3.1', '2026-10-30', 'Added seasonal Ritucharya CONTRAINDICATED_IN edges for Grishma/Varsha'],
-              ['v2.2.0', '2026-10-12', 'Initial IMPPAT 2.0 TSV ingestion + 3072-d classical embeddings']
+              ['v2.4.0 (Sample entry)', '2026-11-18', 'Sample notes: 25 Herbs · 179 Relationships · Label Audit v1 prompt'],
+              ['v2.3.1 (Sample entry)', '2026-10-30', 'Sample notes: seasonal Ritucharya CONTRAINDICATED_IN edges for Grishma/Varsha'],
+              ['v2.2.0 (Sample entry)', '2026-10-12', 'Sample notes: IMPPAT 2.0 TSV ingestion + 3072-d classical embeddings']
             ].map(([ver, date, notes]) => (
               <div key={ver} className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
@@ -165,13 +202,13 @@ export const AdminPortalScreen: React.FC<AdminPortalScreenProps> = ({
           <div className="bg-white border border-[#DDE4DE] rounded-xl p-5 space-y-2">
             <div className="flex items-center gap-2 text-xs font-semibold text-[#26332D]">
               <Database className="w-4 h-4 text-[#173D32]" />
-              <span>Neo4j Aura Instance</span>
+              <span>Catalog Backend Service</span>
             </div>
             <SafetyBadge
               status={backendOnline ? 'verified' : 'insufficient_evidence'}
               labelOverride={backendOnline ? 'Connected' : 'Offline / Demo Mode'}
             />
-            <p className="text-xs text-[#758078]">Catalog connectivity check</p>
+            <p className="text-xs text-[#758078]">Live status check from `/api/status`</p>
           </div>
 
           <div className="bg-white border border-[#DDE4DE] rounded-xl p-5 space-y-2">
@@ -180,7 +217,7 @@ export const AdminPortalScreen: React.FC<AdminPortalScreenProps> = ({
               <span>Safety Gate Audit</span>
             </div>
             <p className="text-xl font-semibold tabular-nums text-[#26332D]">Not available</p>
-            <p className="text-xs text-[#758078]">Aggregate safety metrics are unavailable.</p>
+            <p className="text-xs text-[#758078]">Aggregate monitoring metrics are not wired to this UI.</p>
           </div>
 
           <div className="bg-white border border-[#DDE4DE] rounded-xl p-5 space-y-2">
@@ -189,12 +226,12 @@ export const AdminPortalScreen: React.FC<AdminPortalScreenProps> = ({
               <span>Clinician Feedback Log</span>
             </div>
             <p className="text-xl font-semibold tabular-nums text-[#26332D]">Not available</p>
-            <p className="text-xs text-[#758078]">Individual feedback is private.</p>
+            <p className="text-xs text-[#758078]">Submitted feedback is not readable from this demonstration portal.</p>
           </div>
         </section>
       )}
 
-      {/* Confirmation Modal for Consequential Governance Changes */}
+      {/* Confirmation Modal for Local Demonstration Status Changes */}
       {pendingAction && (
         <div
           role="dialog"
@@ -206,11 +243,12 @@ export const AdminPortalScreen: React.FC<AdminPortalScreenProps> = ({
               <AlertTriangle className="w-5 h-5 text-[#B7791F] shrink-0 mt-0.5" />
               <div className="space-y-1">
                 <h3 className="text-sm font-semibold text-[#26332D]">
-                  Confirm Governance Action
+                  Confirm Demonstration Status Update
                 </h3>
                 <p className="text-xs text-[#758078] leading-relaxed">
-                  You are marking <strong>&ldquo;{pendingAction.item.title}&rdquo;</strong> as{' '}
-                  <strong>{pendingAction.nextStatus}</strong>. This changes safety review status in the audit log.
+                  You are setting the demonstration status of{' '}
+                  <strong>&ldquo;{pendingAction.item.title}&rdquo;</strong> to{' '}
+                  <strong>{pendingAction.nextStatus}</strong>. This modifies only temporary local React state for the current session — it is not recorded in any persistent audit log or database.
                 </p>
               </div>
             </div>
