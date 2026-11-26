@@ -37,6 +37,62 @@ type LedgerFilter = 'all' | 'source_traceable' | 'derived' | 'patient' | 'missin
 type LedgerEntry = EvidenceAssessment['ledger'][number];
 type CoverageRow = EvidenceAssessment['verdict']['coverage'][number];
 type PolicyRule = EvidenceAssessment['verdict']['rules'][number];
+type FindingItem = EvidenceAssessment['findings'][number];
+
+const ENTRY_KIND_LABEL: Record<LedgerEntry['kind'], string> = {
+  classical: 'Classical text',
+  research: 'Research study',
+  association: 'Database association',
+  rule: 'Clinical policy',
+  patient: 'Patient context',
+  derived: 'Derived relationship',
+  interpretation: 'Clinical review note'
+};
+
+const SAFE_METADATA_FIELDS: ReadonlyArray<{
+  key: keyof LedgerEntry['metadata'];
+  label: string;
+}> = [
+  { key: 'author', label: 'Author' },
+  { key: 'edition', label: 'Edition' },
+  { key: 'section', label: 'Section' },
+  { key: 'verse', label: 'Verse' },
+  { key: 'page', label: 'Page' },
+  { key: 'translation', label: 'Translation' },
+  { key: 'plantPart', label: 'Plant part' }
+];
+
+function findingDisplayLabel(finding: FindingItem): string {
+  const roleLabel = finding.role === 'opponent' ? 'Critical review' : 'Supporting evidence';
+  switch (finding.category) {
+    case 'review':
+      return finding.role === 'opponent' ? 'Critical review' : `${roleLabel} — Clinical review`;
+    case 'conflict':
+      return `${roleLabel} — Source conflict`;
+    case 'missing':
+      return `${roleLabel} — Coverage gap`;
+    case 'reported_use':
+      return `${roleLabel} — Reported use`;
+    case 'traditional':
+      return `${roleLabel} — Classical source`;
+    case 'research':
+      return `${roleLabel} — Research`;
+    case 'inference':
+      return `${roleLabel} — Clinical synthesis`;
+    default:
+      return roleLabel;
+  }
+}
+
+function formatCoverageDimension(dimension: string): string {
+  if (dimension.startsWith('rule_')) return 'Clinical policy check';
+  if (dimension.startsWith('finding_')) return 'Evidence review note';
+  return dimension.replaceAll('_', ' ');
+}
+
+function formatMissingNote(note: string): string {
+  return note.replaceAll('_', ' ');
+}
 
 const VERDICT_META: Record<
   SafetyStatus,
@@ -163,8 +219,27 @@ const RULE_OUTCOME_STYLE: Record<PolicyRule['outcome'], string> = {
   permitted: 'bg-[#E8F5EE] text-[#1D6347] border-[#B8DEC9]'
 };
 
-function shortRefLabel(id: string): string {
-  return id.length > 18 ? `${id.slice(0, 14)}…` : id;
+function formatLedgerTitle(entry: LedgerEntry): string {
+  if (entry.kind === 'rule') return 'Approved clinical policy rule';
+  if (entry.method === 'registry') return 'Clinical safety policy check';
+  return entry.title || 'Source title unavailable';
+}
+
+function formatLedgerLocation(entry: LedgerEntry): string {
+  if (entry.kind === 'rule' || entry.method === 'registry') {
+    return 'Clinical policy registry';
+  }
+  if (!entry.location) return 'Location unavailable';
+  if (entry.kind === 'patient') {
+    return entry.location.replaceAll('_', ' ');
+  }
+  if (entry.location.startsWith('condition:')) {
+    return `Condition: ${entry.location.slice('condition:'.length)}`;
+  }
+  if (entry.location.startsWith('season:')) {
+    return `Season: ${entry.location.slice('season:'.length)}`;
+  }
+  return entry.location;
 }
 
 export const AIAssessmentScreen: React.FC<AIAssessmentScreenProps> = ({
@@ -180,6 +255,19 @@ export const AIAssessmentScreen: React.FC<AIAssessmentScreenProps> = ({
   const [activeEvidenceId, setActiveEvidenceId] = useState<string | null>(null);
 
   const assessment = consultation?.assessment;
+
+  const ledgerRefMap = useMemo(() => {
+    const map = new Map<string, { refNumber: number; title: string; location: string }>();
+    const entries = assessment?.ledger ?? [];
+    entries.forEach((entry, index) => {
+      map.set(entry.id, {
+        refNumber: index + 1,
+        title: formatLedgerTitle(entry),
+        location: formatLedgerLocation(entry)
+      });
+    });
+    return map;
+  }, [assessment]);
 
   const filteredLedger = useMemo(() => {
     const entries = assessment?.ledger ?? [];
@@ -216,7 +304,8 @@ export const AIAssessmentScreen: React.FC<AIAssessmentScreenProps> = ({
   const coverageSummary = useMemo(() => {
     const rows = assessment?.verdict.coverage ?? [];
     return {
-      assessed: rows.filter(r => r.status === 'assessed' || r.status === 'not_applicable').length,
+      assessed: rows.filter(r => r.status === 'assessed').length,
+      notApplicable: rows.filter(r => r.status === 'not_applicable').length,
       gaps: rows.filter(
         r => r.status === 'not_assessed' || r.status === 'insufficient_evidence'
       ).length,
@@ -232,23 +321,25 @@ export const AIAssessmentScreen: React.FC<AIAssessmentScreenProps> = ({
       <div className="flex flex-wrap items-center gap-1.5 pt-1">
         {ids.map(id => {
           const active = activeEvidenceId === id;
+          const refInfo = ledgerRefMap.get(id);
+          const label = refInfo ? `Ref #${refInfo.refNumber}` : 'Evidence ref';
+          const tooltip = refInfo ? `${label}: ${refInfo.title} (${refInfo.location})` : label;
           return (
             <a
               key={id}
               href={`#${id}`}
-              title={id}
+              title={tooltip}
               onClick={() => {
                 setLedgerFilter('all');
                 setActiveEvidenceId(id);
               }}
-              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md border font-mono text-[11px] transition break-all ${
+              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md border text-[11px] font-medium transition ${
                 active
                   ? 'bg-[#173D32] text-white border-[#173D32]'
                   : 'bg-[#F7F5EE] text-[#164B45] border-[#DDE4DE] hover:bg-[#E8EFE8] hover:border-[#A8B8A0]'
               }`}
             >
-              <span>{shortRefLabel(id)}</span>
-              <span className="sr-only">{id}</span>
+              <span>{label}</span>
             </a>
           );
         })}
@@ -443,11 +534,6 @@ export const AIAssessmentScreen: React.FC<AIAssessmentScreenProps> = ({
                 <span className="px-2.5 py-0.5 rounded-md bg-[#F7F5EE] border border-[#DDE4DE] font-mono text-[11px] font-medium text-[#26332D]">
                   {consultation.verdictLabel}
                 </span>
-                {assessment && (
-                  <span className="px-2.5 py-0.5 rounded-md bg-[#F7F5EE] border border-[#DDE4DE] font-mono text-[11px] text-[#758078]">
-                    Policy v{assessment.verdict.policyVersion}
-                  </span>
-                )}
                 {showExpertNotice && (
                   <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#FDF4E6] border border-[#EAD0A1] text-[11px] font-semibold text-[#945F14]">
                     <UserCheck className="w-3 h-3" />
@@ -462,7 +548,7 @@ export const AIAssessmentScreen: React.FC<AIAssessmentScreenProps> = ({
             </div>
 
             {assessment && (
-              <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 shrink-0 text-xs">
+              <div className="flex flex-wrap items-center gap-2 shrink-0 text-xs">
                 <div className="px-3 py-2 rounded-lg bg-[#F7F5EE] border border-[#DDE4DE] text-center min-w-[76px]">
                   <p className="text-[10px] uppercase tracking-wider text-[#758078] font-medium">
                     Assessed
@@ -471,6 +557,16 @@ export const AIAssessmentScreen: React.FC<AIAssessmentScreenProps> = ({
                     {coverageSummary.assessed}
                   </p>
                 </div>
+                {coverageSummary.notApplicable > 0 && (
+                  <div className="px-3 py-2 rounded-lg bg-[#F7F5EE] border border-[#DDE4DE] text-center min-w-[88px]">
+                    <p className="text-[10px] uppercase tracking-wider text-[#758078] font-medium">
+                      Not applicable
+                    </p>
+                    <p className="text-base font-semibold tabular-nums text-[#164B45]">
+                      {coverageSummary.notApplicable}
+                    </p>
+                  </div>
+                )}
                 <div className="px-3 py-2 rounded-lg bg-[#F7F5EE] border border-[#DDE4DE] text-center min-w-[76px]">
                   <p className="text-[10px] uppercase tracking-wider text-[#758078] font-medium">
                     Gaps
@@ -543,16 +639,11 @@ export const AIAssessmentScreen: React.FC<AIAssessmentScreenProps> = ({
                     className="rounded-lg border border-[#DDE4DE] bg-[#F7F5EE]/60 p-3.5 space-y-2"
                   >
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div className="flex items-center gap-1.5 min-w-0">
-                        <span className="font-mono text-xs font-semibold text-[#173D32] truncate">
-                          {rule.ruleId}
-                        </span>
-                        <span className="text-[11px] font-mono text-[#758078]">
-                          v{rule.version}
-                        </span>
-                      </div>
+                      <span className="text-xs font-semibold text-[#173D32]">
+                        Policy rule #{idx + 1}
+                      </span>
                       <span
-                        className={`px-2 py-0.5 rounded-full border text-[11px] font-medium whitespace-nowrap ${
+                        className={`px-2 py-0.5 rounded-full border text-[11px] font-medium whitespace-nowrap capitalize ${
                           RULE_OUTCOME_STYLE[rule.outcome]
                         }`}
                       >
@@ -578,9 +669,9 @@ export const AIAssessmentScreen: React.FC<AIAssessmentScreenProps> = ({
                 {consultation.missingInformation.map((note, idx) => (
                   <span
                     key={`${note}-${idx}`}
-                    className="px-2.5 py-1 rounded-md bg-white border border-[#DDE4DE] text-xs text-[#4C5750]"
+                    className="px-2.5 py-1 rounded-md bg-white border border-[#DDE4DE] text-xs text-[#4C5750] capitalize"
                   >
-                    {note}
+                    {formatMissingNote(note)}
                   </span>
                 ))}
               </div>
@@ -646,7 +737,7 @@ export const AIAssessmentScreen: React.FC<AIAssessmentScreenProps> = ({
                       >
                         <div className="flex flex-wrap items-center justify-between gap-2">
                           <span
-                            className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border text-[11px] font-semibold capitalize ${roleBadgeClasses}`}
+                            className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border text-[11px] font-semibold ${roleBadgeClasses}`}
                           >
                             {isConflict ? (
                               <ShieldAlert className="w-3 h-3" />
@@ -655,9 +746,7 @@ export const AIAssessmentScreen: React.FC<AIAssessmentScreenProps> = ({
                             ) : (
                               <ShieldCheck className="w-3 h-3" />
                             )}
-                            <span>
-                              {finding.role} / {finding.category.replaceAll('_', ' ')}
-                            </span>
+                            <span>{findingDisplayLabel(finding)}</span>
                           </span>
                           <span className="text-[11px] text-[#758078] tabular-nums">
                             {finding.evidenceIds.length}{' '}
@@ -693,8 +782,13 @@ export const AIAssessmentScreen: React.FC<AIAssessmentScreenProps> = ({
                   <span className="px-2 py-0.5 rounded bg-[#E8F5EE] text-[#1D6347] border border-[#B8DEC9] font-medium tabular-nums">
                     {coverageSummary.assessed} assessed
                   </span>
+                  {coverageSummary.notApplicable > 0 && (
+                    <span className="px-2 py-0.5 rounded bg-[#E8EFE8] text-[#164B45] border border-[#C9D8CC] font-medium tabular-nums">
+                      {coverageSummary.notApplicable} not applicable
+                    </span>
+                  )}
                   <span className="px-2 py-0.5 rounded bg-[#F2F4F2] text-[#4C5750] border border-[#D3DBD4] font-medium tabular-nums">
-                    {coverageSummary.gaps} unassessed
+                    {coverageSummary.gaps} gaps
                   </span>
                   {coverageSummary.review > 0 && (
                     <span className="px-2 py-0.5 rounded bg-[#FDF4E6] text-[#945F14] border border-[#EAD0A1] font-medium tabular-nums">
@@ -716,7 +810,7 @@ export const AIAssessmentScreen: React.FC<AIAssessmentScreenProps> = ({
                       <div className="space-y-1.5">
                         <div className="flex flex-wrap items-start justify-between gap-2">
                           <strong className="text-xs font-semibold text-[#26332D] capitalize">
-                            {row.dimension.replaceAll('_', ' ')}
+                            {formatCoverageDimension(row.dimension)}
                           </strong>
                           <span
                             className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[11px] font-medium whitespace-nowrap ${cfg.classes}`}
@@ -733,7 +827,7 @@ export const AIAssessmentScreen: React.FC<AIAssessmentScreenProps> = ({
                                 key={`${note}-${idx}`}
                                 className="px-2 py-0.5 rounded bg-white border border-[#DDE4DE] text-[11px] text-[#758078]"
                               >
-                                Missing: {note.replaceAll('_', ' ')}
+                                Missing: {formatMissingNote(note)}
                               </span>
                             ))}
                           </div>
@@ -777,7 +871,7 @@ export const AIAssessmentScreen: React.FC<AIAssessmentScreenProps> = ({
                       [
                         ['all', `All (${ledgerCounts.all})`],
                         ['source_traceable', `Source (${ledgerCounts.source_traceable})`],
-                        ['derived', `Ontology (${ledgerCounts.derived})`],
+                        ['derived', `Derived & Policy (${ledgerCounts.derived})`],
                         ['patient', `Patient (${ledgerCounts.patient})`],
                         ['missing_provenance', `Missing (${ledgerCounts.missing_provenance})`]
                       ] as const
@@ -830,7 +924,16 @@ export const AIAssessmentScreen: React.FC<AIAssessmentScreenProps> = ({
                   {filteredLedger.map(entry => {
                     const verCfg = VERIFICATION_STYLE[entry.verification];
                     const isFocused = activeEvidenceId === entry.id;
-                    const metadataEntries = Object.entries(entry.metadata);
+                    const refInfo = ledgerRefMap.get(entry.id);
+                    const displayTitle = refInfo?.title ?? formatLedgerTitle(entry);
+                    const displayLocation = refInfo?.location ?? formatLedgerLocation(entry);
+                    const safeMetadata = SAFE_METADATA_FIELDS.flatMap(({ key, label }) => {
+                      const rawValue = entry.metadata[key];
+                      if (rawValue === undefined || rawValue === null || rawValue === '') {
+                        return [];
+                      }
+                      return [{ key, label, value: String(rawValue) }];
+                    });
 
                     return (
                       <article
@@ -848,21 +951,18 @@ export const AIAssessmentScreen: React.FC<AIAssessmentScreenProps> = ({
                             <div className="flex flex-wrap items-center gap-1.5">
                               <Database className="w-3.5 h-3.5 text-[#164B45] shrink-0" />
                               <strong className="text-xs font-semibold text-[#26332D] break-words">
-                                {entry.title || 'Source title unavailable'}
+                                {displayTitle}
                               </strong>
                             </div>
                             <div className="flex flex-wrap items-center gap-1.5 text-[10px] font-medium text-[#758078]">
-                              <span className="px-1.5 py-0.5 rounded bg-white border border-[#DDE4DE] text-[#26332D] uppercase tracking-wider">
-                                {entry.kind}
-                              </span>
-                              <span className="px-1.5 py-0.5 rounded bg-white border border-[#DDE4DE] uppercase tracking-wider">
-                                {entry.method}
-                              </span>
-                              {typeof entry.relevance === 'number' && (
-                                <span className="px-1.5 py-0.5 rounded bg-white border border-[#DDE4DE] font-mono text-[#164B45] tabular-nums">
-                                  sim {entry.relevance.toFixed(3)}
+                              {refInfo && (
+                                <span className="px-1.5 py-0.5 rounded bg-[#E8EFE8] border border-[#C9D8CC] text-[#173D32] font-semibold">
+                                  Ref #{refInfo.refNumber}
                                 </span>
                               )}
+                              <span className="px-1.5 py-0.5 rounded bg-white border border-[#DDE4DE] text-[#26332D]">
+                                {ENTRY_KIND_LABEL[entry.kind]}
+                              </span>
                             </div>
                           </div>
 
@@ -876,8 +976,8 @@ export const AIAssessmentScreen: React.FC<AIAssessmentScreenProps> = ({
                         {entry.fact && (
                           <div className="flex flex-wrap items-center gap-1.5 text-[11px] bg-white border border-[#DDE4DE] rounded-md px-2.5 py-1.5 text-[#26332D]">
                             <span className="font-semibold text-[#173D32]">{entry.fact.subject}</span>
-                            <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-[#E8EFE8] text-[#164B45]">
-                              {entry.fact.predicate}
+                            <span className="text-[10px] font-medium lowercase px-1.5 py-0.5 rounded bg-[#E8EFE8] text-[#164B45]">
+                              {entry.fact.predicate.replaceAll('_', ' ')}
                             </span>
                             <span className="font-medium">{entry.fact.object}</span>
                           </div>
@@ -891,32 +991,23 @@ export const AIAssessmentScreen: React.FC<AIAssessmentScreenProps> = ({
                           <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                             <span className="inline-flex items-center gap-1">
                               <FileText className="w-3 h-3 text-[#758078]" />
-                              <span>{entry.location || 'Location unavailable'}</span>
+                              <span>{displayLocation}</span>
                             </span>
-                            {entry.sourceId && (
-                              <span className="font-mono text-[10px] text-[#758078] break-all">
-                                src: {entry.sourceId}
-                              </span>
-                            )}
                           </div>
 
-                          {metadataEntries.length > 0 && (
+                          {safeMetadata.length > 0 && (
                             <div className="flex flex-wrap gap-1.5 pt-0.5">
-                              {metadataEntries.map(([key, value]) => (
+                              {safeMetadata.map(({ key, label, value }) => (
                                 <span
                                   key={key}
                                   className="px-2 py-0.5 rounded bg-white border border-[#DDE4DE] text-[10px] text-[#4C5750]"
                                 >
-                                  <strong className="font-medium text-[#26332D]">{key}:</strong>{' '}
-                                  {String(value)}
+                                  <strong className="font-medium text-[#26332D]">{label}:</strong>{' '}
+                                  {value}
                                 </span>
                               ))}
                             </div>
                           )}
-
-                          <small className="block font-mono text-[10px] text-[#758078] break-all pt-1 border-t border-[#DDE4DE]/80">
-                            {entry.id}
-                          </small>
                         </div>
                       </article>
                     );
