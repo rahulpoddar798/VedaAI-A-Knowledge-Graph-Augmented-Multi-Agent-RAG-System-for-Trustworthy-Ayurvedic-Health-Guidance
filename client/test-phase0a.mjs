@@ -40,9 +40,72 @@ test('assessment and transparency render only evidence belonging to the selected
   assert.deepEqual(session.records, [live]);
   assert.equal(receiveConsultation(session, { ...live, isSampleData: true }), session);
   const page = renderToStaticMarkup(createElement(AIAssessmentScreen, { consultation: live, allConsultations: [live] }));
-  for (const phrase of ['Source row fixture', 'line 19', 'expert review required', 'not assessed', 'ev-', 'selected'])
+  for (const phrase of ['Source row fixture', 'line 19', 'expert review required', 'not assessed', 'ev-', 'selected', 'Derived &amp; Policy'])
     assert.ok(page.toLowerCase().includes(phrase.toLowerCase()), phrase);
   assert.doesNotMatch(page, /model confidence|reliability|retrieval coverage/i);
+  assert.doesNotMatch(page, /\b(proponent|opponent)\b/i);
+  assert.doesNotMatch(page, /\bOntology\b/i);
+  assert.doesNotMatch(page, /Policy v\d|legacy-|documentId|chunkId|src:|\bsim\s+0\.|>\s*ev-[a-f0-9]+/i);
+  assert.match(page, /Supporting evidence|Critical review/i);
+  assert.match(page, /Ref #1/);
+  // Also test rich metadata/policy/relevance masking
+  const maskedFixture = structuredClone(payload);
+  maskedFixture.result.assessment.findings.push({
+    role: 'proponent', category: 'traditional', evidenceIds: [maskedFixture.result.assessment.ledger[0].id],
+    text: 'Classical excerpt support note.'
+  });
+  maskedFixture.result.assessment.ledger[0].metadata = {
+    documentId: 'internal-doc-999', chunkId: 'chunk-abc-123', author: 'Acharya Charaka', page: 42
+  };
+  maskedFixture.result.assessment.ledger[0].relevance = 0.912;
+  const maskedRecord = mapConsultation(maskedFixture, 'Metadata masking check', profile);
+  const maskedView = renderToStaticMarkup(createElement(AIAssessmentScreen, {
+    consultation: maskedRecord, allConsultations: [maskedRecord], onSelectConsultation: () => {}, onNavigate: () => {}
+  }));
+  assert.match(maskedView, /Author:.*Acharya Charaka/);
+  assert.match(maskedView, /Page:.*42/);
+  assert.match(maskedView, /Supporting evidence/);
+  assert.match(maskedView, /Critical review/);
+  assert.doesNotMatch(maskedView, /internal-doc-999|chunk-abc-123|documentId|chunkId|\bsim\s+0\.912|\b(proponent|opponent)\b/i);
+  // Ensure strict Assessed count excludes not_applicable rows when present
+  const naExample = structuredClone(payload);
+  naExample.result.assessment.verdict.coverage.forEach(c => {
+    c.status = c.dimension === 'interactions' ? 'not_applicable' : 'not_assessed';
+  });
+  naExample.result.assessment.verdict.coverage[0].status = 'assessed';
+  const naRecord = mapConsultation(naExample, 'N/A coverage count check', profile);
+  const naView = renderToStaticMarkup(createElement(AIAssessmentScreen, {
+    consultation: naRecord, allConsultations: [naRecord], onSelectConsultation: () => {}, onNavigate: () => {}
+  }));
+  assert.match(naView, />1<\/p>/);
+  assert.match(naView, /1 not applicable/i);
+
+  const loadingView = renderToStaticMarkup(createElement(AIAssessmentScreen, {
+    consultation: null, allConsultations: [], onSelectConsultation: () => {}, onNavigate: () => {}, isLoading: true
+  }));
+  assert.match(loadingView, /Loading clinical assessment/i);
+  const errorView = renderToStaticMarkup(createElement(AIAssessmentScreen, {
+    consultation: null, allConsultations: [], onSelectConsultation: () => {}, onNavigate: () => {}, error: 'Service temporarily unavailable.'
+  }));
+  assert.match(errorView, /Assessment unavailable/);
+  assert.match(errorView, /Service temporarily unavailable\./);
+  const emptyView = renderToStaticMarkup(createElement(AIAssessmentScreen, {
+    consultation: null, allConsultations: [], onSelectConsultation: () => {}, onNavigate: () => {}
+  }));
+  assert.match(emptyView, /No assessment selected/);
+  const insufficientWorkflow = buildVedaAIPipeline({
+    graph: async () => [], tables: async () => [], documents: async () => [],
+    provider: { generateJSON: async () => ({ ids: [] }) }
+  });
+  const insId = randomUUID();
+  const insState = await insufficientWorkflow.invoke({ consultationId: insId, raw_query: 'Unknown herb' });
+  const insRecord = mapConsultation({ success: true, followUpToken: 'y'.repeat(43), consultationId: insId, result: insState.final_response }, 'Unknown herb', profile);
+  const insView = renderToStaticMarkup(createElement(AIAssessmentScreen, {
+    consultation: insRecord, allConsultations: [insRecord], onSelectConsultation: () => {}, onNavigate: () => {}
+  }));
+  assert.match(insView, /Safety clearance has not been established/);
+  assert.match(insView, /No evidence was selected\. Safety remains unestablished\./);
+  assert.doesNotMatch(insView, /model confidence|reliability|retrieval coverage/i);
   for (const category of ['blocked', 'restricted', 'expert_review_required', 'insufficient_evidence']) {
     const example = structuredClone(payload);
     example.result.assessment.verdict.category = category;
