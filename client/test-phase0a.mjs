@@ -43,6 +43,33 @@ test('assessment and transparency render only evidence belonging to the selected
   for (const phrase of ['Source row fixture', 'line 19', 'expert review required', 'not assessed', 'ev-', 'selected'])
     assert.ok(page.toLowerCase().includes(phrase.toLowerCase()), phrase);
   assert.doesNotMatch(page, /model confidence|reliability|retrieval coverage/i);
+
+  const loadingView = renderToStaticMarkup(createElement(AIAssessmentScreen, {
+    consultation: null, allConsultations: [], onSelectConsultation: () => {}, onNavigate: () => {}, isLoading: true
+  }));
+  assert.match(loadingView, /Loading clinical assessment/i);
+  const errorView = renderToStaticMarkup(createElement(AIAssessmentScreen, {
+    consultation: null, allConsultations: [], onSelectConsultation: () => {}, onNavigate: () => {}, error: 'Service temporarily unavailable.'
+  }));
+  assert.match(errorView, /Assessment unavailable/);
+  assert.match(errorView, /Service temporarily unavailable\./);
+  const emptyView = renderToStaticMarkup(createElement(AIAssessmentScreen, {
+    consultation: null, allConsultations: [], onSelectConsultation: () => {}, onNavigate: () => {}
+  }));
+  assert.match(emptyView, /No assessment selected/);
+  const insufficientWorkflow = buildVedaAIPipeline({
+    graph: async () => [], tables: async () => [], documents: async () => [],
+    provider: { generateJSON: async () => ({ ids: [] }) }
+  });
+  const insId = randomUUID();
+  const insState = await insufficientWorkflow.invoke({ consultationId: insId, raw_query: 'Unknown herb' });
+  const insRecord = mapConsultation({ success: true, followUpToken: 'y'.repeat(43), consultationId: insId, result: insState.final_response }, 'Unknown herb', profile);
+  const insView = renderToStaticMarkup(createElement(AIAssessmentScreen, {
+    consultation: insRecord, allConsultations: [insRecord], onSelectConsultation: () => {}, onNavigate: () => {}
+  }));
+  assert.match(insView, /Safety clearance has not been established/);
+  assert.match(insView, /No evidence was selected\. Safety remains unestablished\./);
+  assert.doesNotMatch(insView, /model confidence|reliability|retrieval coverage/i);
   for (const category of ['blocked', 'restricted', 'expert_review_required', 'insufficient_evidence']) {
     const example = structuredClone(payload);
     example.result.assessment.verdict.category = category;
